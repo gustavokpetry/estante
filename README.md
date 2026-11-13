@@ -6,7 +6,7 @@ Biblioteca pessoal de PDFs: você adiciona os arquivos e lê cada um como se fos
 - Pode ser instalado no celular e no computador (PWA) e funciona sem internet.
 - Publicado no GitHub Pages: `https://gustavokpetry.github.io/estante/`
 
-Versão atual: **1.1** (veja o [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.2** (veja o [CHANGELOG](CHANGELOG.md)).
 
 ## O que já funciona
 
@@ -21,6 +21,7 @@ Versão atual: **1.1** (veja o [CHANGELOG](CHANGELOG.md)).
 - Três modos: virada de página com dobra, livro simples (duas páginas) e página única.
 - A capa aparece sozinha; depois as páginas seguem em pares.
 - No celular em pé aparece uma página por vez; deitado, duas.
+- Livros horizontais (páginas deitadas) abrem de três jeitos, à escolha por livro: encadernação no topo, uma página por vez ou duas lado a lado.
 - Navegação por toque, arrasto do canto, deslize, setas do teclado, barra de posição, "ir para a página" e sumário do PDF.
 - Zoom (pinça, Ctrl + roda do mouse, teclas + e -) e tela cheia.
 - Cor das páginas: original, sépia ou noite.
@@ -35,6 +36,7 @@ Versão atual: **1.1** (veja o [CHANGELOG](CHANGELOG.md)).
 | Tecla | Ação |
 | --- | --- |
 | → / Page Down / Espaço | Próxima página |
+| ↓ / ↑ | Próxima / anterior, em livros com encadernação no topo |
 | ← / Page Up / Shift + Espaço | Página anterior |
 | Home / End | Primeira / última página |
 | + / - / 0 | Aumentar / diminuir / tirar o zoom |

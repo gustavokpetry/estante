@@ -154,6 +154,40 @@ export function calcularDobra({ largura: L, altura: A, lado, canto, p: entrada }
   }
 }
 
+const trocar = (q: Ponto): Ponto => ({ x: q.y, y: q.x })
+
+/**
+ * Encadernação no topo (bloco de notas, calendário de mesa): a lombada fica
+ * na borda de cima e a folha sobe. É a mesma conta da virada lateral com os
+ * eixos trocados: resolvemos o problema "deitado" e trocamos x e y de volta.
+ *
+ * Aqui `canto` vale 'base' para o canto de baixo à direita e 'topo' para o
+ * canto de baixo à esquerda.
+ */
+export function calcularDobraNoTopo({ largura, altura, canto, p }: Omit<EntradaDobra, 'lado'>): Dobra {
+  const d = calcularDobra({ largura: altura, altura: largura, lado: 1, canto, p: trocar(p) })
+  const [ax, ay, bx, by, ox, oy] = d.matrizVerso
+  return {
+    ...d,
+    p: trocar(d.p),
+    meio: trocar(d.meio),
+    normal: trocar(d.normal),
+    recorteFrente: d.recorteFrente.map(trocar),
+    recorteVerso: d.recorteVerso.map(trocar),
+    recorteFundo: d.recorteFundo.map(trocar),
+    matrizVerso: [by, bx, ay, ax, oy, ox],
+  }
+}
+
+/** Canto de baixo da folha presa pelo topo, e para onde ele vai ao virar (acima da lombada). */
+export function cantoNoTopo(largura: number, altura: number, canto: Canto): Ponto {
+  return { x: canto === 'base' ? largura : 0, y: altura }
+}
+
+export function cantoOpostoNoTopo(largura: number, altura: number, canto: Canto): Ponto {
+  return { x: canto === 'base' ? largura : 0, y: -altura }
+}
+
 /** Polígono → valor de `clip-path`. */
 export function poligonoCss(pontos: Ponto[]): string {
   if (pontos.length < 3) return 'polygon(0 0, 0 0, 0 0)'

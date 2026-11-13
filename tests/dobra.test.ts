@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { calcularDobra, cantoDaFolha, cantoOposto, type Ponto } from '../src/lib/dobra'
+import {
+  calcularDobra,
+  calcularDobraNoTopo,
+  cantoDaFolha,
+  cantoNoTopo,
+  cantoOposto,
+  cantoOpostoNoTopo,
+  type Ponto,
+} from '../src/lib/dobra'
 
 const L = 300
 const A = 400
@@ -65,5 +73,44 @@ describe('calcularDobra', () => {
   it('o papel não estica: o canto nunca passa do alcance da lombada', () => {
     const d = calcularDobra({ largura: L, altura: A, lado: 1, canto: 'base', p: { x: -900, y: -900 } })
     expect(Math.hypot(d.p.x, d.p.y - A)).toBeLessThanOrEqual(L + 1e-6)
+  })
+})
+
+describe('calcularDobraNoTopo (encadernação no topo)', () => {
+  const LT = 400
+  const AT = 300
+
+  it('folha no lugar: nada dobrado', () => {
+    const d = calcularDobraNoTopo({ largura: LT, altura: AT, canto: 'base', p: cantoNoTopo(LT, AT, 'base') })
+    expect(d.plana).toBe(true)
+    expect(area(d.recorteFrente)).toBeCloseTo(LT * AT)
+  })
+
+  it('frente + verso somam a folha inteira', () => {
+    for (const p of [{ x: 350, y: 120 }, { x: 80, y: -60 }, { x: 390, y: 280 }]) {
+      const d = calcularDobraNoTopo({ largura: LT, altura: AT, canto: 'base', p })
+      expect(area(d.recorteFrente) + area(d.recorteVerso)).toBeCloseTo(LT * AT, 3)
+    }
+  })
+
+  it('virada completa: o verso fica em pé, logo acima da lombada', () => {
+    const d = calcularDobraNoTopo({ largura: LT, altura: AT, canto: 'topo', p: cantoOpostoNoTopo(LT, AT, 'topo') })
+    const a = aplicar(d.matrizVerso, 0, 0)
+    const b = aplicar(d.matrizVerso, LT, AT)
+    expect(a.x).toBeCloseTo(0)
+    expect(a.y).toBeCloseTo(-AT)
+    expect(b.x).toBeCloseTo(LT)
+    expect(b.y).toBeCloseTo(0)
+  })
+
+  it('o verso continua sendo uma rotação e o canto segue o dedo', () => {
+    const p = { x: 300, y: 90 }
+    const d = calcularDobraNoTopo({ largura: LT, altura: AT, canto: 'base', p })
+    const [a, b, c, e] = d.matrizVerso
+    expect(a * e - b * c).toBeCloseTo(1)
+    // Canto de baixo à direita da frente = canto de cima à direita do verso.
+    const canto = aplicar(d.matrizVerso, LT, 0)
+    expect(canto.x).toBeCloseTo(d.p.x)
+    expect(canto.y).toBeCloseTo(d.p.y)
   })
 })

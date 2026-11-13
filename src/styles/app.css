@@ -1666,3 +1666,98 @@ input {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   v1.2: livros horizontais e encadernação no topo
+   ========================================================================== */
+
+/* Lombada em cima: o que sobe além dela some, como a folha que vai para trás do bloco. */
+.livro-topo {
+  clip-path: inset(-8px -60vw -60vh -60vw);
+}
+
+.livro-topo .folha {
+  border-radius: 0 0 3px 3px;
+}
+
+/* Espiral do bloco, só como acabamento. */
+.livro-topo::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: -6px;
+  left: 4%;
+  right: 4%;
+  height: 12px;
+  background: repeating-linear-gradient(90deg, #d8b463 0 3px, #7c5a1e 3px 5px, transparent 5px 22px);
+  border-radius: 6px;
+  opacity: 0.9;
+  pointer-events: none;
+  clip-path: none;
+}
+
+.entra-vertical.entra-frente {
+  animation-name: entrar-baixo;
+}
+
+.entra-vertical.entra-tras {
+  animation-name: entrar-cima;
+}
+
+@keyframes entrar-baixo {
+  from {
+    opacity: 0.35;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes entrar-cima {
+  from {
+    opacity: 0.35;
+    transform: translateY(-18px);
+  }
+}
+
+.borda-cima,
+.borda-baixo {
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 24%;
+  justify-content: center;
+}
+
+.borda-cima {
+  top: 0;
+  bottom: auto;
+  align-items: flex-start;
+}
+
+.borda-baixo {
+  top: auto;
+  bottom: 0;
+  align-items: flex-end;
+}
+
+.borda-cima span,
+.borda-baixo span {
+  margin: 6px 0;
+  transform: rotate(90deg);
+}
+
+.campo select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+}
+
+.campos-lado-a-lado {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}

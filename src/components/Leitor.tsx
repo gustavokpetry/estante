@@ -6,7 +6,7 @@ import { CachePaginas } from '../lib/paginas'
 import { abrirPdf, FalhaAoAbrirPdf, type PdfAberto } from '../lib/pdf'
 import { voltarParaEstante } from '../lib/rota'
 import { lerSumario, paginaDoDestino, type ItemSumario } from '../lib/sumario'
-import type { FiltroPagina, Livro, ModoLeitura } from '../lib/types'
+import type { FiltroPagina, Livro, ModoHorizontal, ModoLeitura } from '../lib/types'
 import {
   IconeAparencia,
   IconeAvancar,
@@ -33,6 +33,13 @@ const MODOS: Array<{ valor: ModoLeitura; nome: string; descricao: string }> = [
   { valor: '3d', nome: 'Virada de página', descricao: 'A folha dobra e vira, como no papel.' },
   { valor: 'simples', nome: 'Livro simples', descricao: 'Duas páginas lado a lado, troca rápida.' },
   { valor: 'unica', nome: 'Página única', descricao: 'Uma página por vez, maior.' },
+]
+
+const ABERTURAS: Array<{ valor: ModoHorizontal | null; nome: string; descricao: string }> = [
+  { valor: null, nome: 'Automático', descricao: 'Escolhe o que cabe melhor na tela.' },
+  { valor: 'topo', nome: 'Encadernação no topo', descricao: 'A página sobe, como num calendário de mesa.' },
+  { valor: 'uma', nome: 'Uma página por vez', descricao: 'A página vira para o lado.' },
+  { valor: 'duas', nome: 'Duas páginas lado a lado', descricao: 'Como um álbum aberto.' },
 ]
 
 const FILTROS: Array<{ valor: FiltroPagina; nome: string }> = [
@@ -157,22 +164,40 @@ export function Leitor({ livroId }: { livroId: string }) {
   const modo: ModoLeitura = livro?.modoLeitura ?? modoPadrao ?? '3d'
   const horizontal = (livro ?? aberto?.livro)?.orientacao === 'horizontal'
 
+  const aberturaEscolhida = (livro ?? aberto?.livro)?.modoHorizontal ?? null
+
   const disposicao = useMemo(() => {
     const proporcao = aberto?.proporcao ?? 0.7
     const { largura, altura } = espaco
     if (largura <= 0 || altura <= 0) return null
-    // Duas páginas só quando cabem com folga: tela deitada e livro vertical.
-    const duas = modo !== 'unica' && !horizontal && largura >= altura * 1.05
+
+    let duas: boolean
+    let eixo: 'lado' | 'topo' = 'lado'
+    if (horizontal) {
+      // Livro deitado: vale a escolha feita para ele. No automático, duas
+      // páginas só se a tela for larga a ponto de quase não diminuí-las.
+      const tamanhoComUma = Math.min(largura, altura * proporcao)
+      const tamanhoComDuas = Math.min(largura / 2, altura * proporcao)
+      const abertura = aberturaEscolhida ?? (tamanhoComDuas >= tamanhoComUma * 0.8 ? 'duas' : 'uma')
+      duas = abertura === 'duas'
+      if (abertura === 'topo') eixo = 'topo'
+    } else {
+      // Livro em pé: duas páginas só quando cabem com folga (tela deitada).
+      duas = modo !== 'unica' && largura >= altura * 1.05
+    }
+
     const colunas = duas ? 2 : 1
     const alturaPagina = Math.min(altura, largura / colunas / proporcao)
     return {
       duas,
+      eixo,
       largura: Math.floor(alturaPagina * proporcao),
       altura: Math.floor(alturaPagina),
     }
-  }, [aberto?.proporcao, espaco, modo, horizontal])
+  }, [aberto?.proporcao, espaco, modo, horizontal, aberturaEscolhida])
 
   const duas = disposicao?.duas ?? false
+  const noTopo = disposicao?.eixo === 'topo'
   const total = aberto?.total ?? 1
 
   // Ao trocar entre uma e duas páginas, ajusta para o começo da abertura.
@@ -242,6 +267,16 @@ export function Leitor({ livroId }: { livroId: string }) {
           break
         case 'ArrowLeft':
         case 'PageUp':
+          e.preventDefault()
+          palco.current?.voltar()
+          break
+        case 'ArrowDown':
+          if (!noTopo || zoom > 1) return
+          e.preventDefault()
+          palco.current?.avancar()
+          break
+        case 'ArrowUp':
+          if (!noTopo || zoom > 1) return
           e.preventDefault()
           palco.current?.voltar()
           break
@@ -392,6 +427,7 @@ export function Leitor({ livroId }: { livroId: string }) {
               pagina={pagina}
               aoMudarPagina={mudarPagina}
               duas={disposicao.duas}
+              eixo={disposicao.eixo}
               largura={disposicao.largura}
               altura={disposicao.altura}
               tresD={tresD}
@@ -410,14 +446,39 @@ export function Leitor({ livroId }: { livroId: string }) {
               </button>
             </header>
             <div className="painel-corpo">
+              {horizontal && (
+                <fieldset className="opcoes">
+                  <legend>Como este livro abre</legend>
+                  {ABERTURAS.map((a) => (
+                    <label key={a.valor ?? 'auto'} className="opcao">
+                      <input
+                        type="radio"
+                        name="abertura"
+                        checked={aberturaEscolhida === a.valor}
+                        onChange={() => void db.livros.update(livroId, { modoHorizontal: a.valor })}
+                      />
+                      <span>
+                        <strong>{a.nome}</strong>
+                        <small>{a.descricao}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+
               <fieldset className="opcoes">
                 <legend>Como as páginas viram</legend>
-                {MODOS.map((m) => (
+                {MODOS.filter((m) => !horizontal || m.valor !== 'unica').map((m) => (
                   <label key={m.valor} className="opcao">
-                    <input type="radio" name="modo" checked={modo === m.valor} onChange={() => escolherModo(m.valor)} />
+                    <input
+                      type="radio"
+                      name="modo"
+                      checked={horizontal ? (modo === '3d') === (m.valor === '3d') : modo === m.valor}
+                      onChange={() => escolherModo(m.valor)}
+                    />
                     <span>
-                      <strong>{m.nome}</strong>
-                      <small>{m.descricao}</small>
+                      <strong>{horizontal && m.valor === 'simples' ? 'Troca simples' : m.nome}</strong>
+                      <small>{horizontal && m.valor === 'simples' ? 'Sem animação de dobra, troca rápida.' : m.descricao}</small>
                     </span>
                   </label>
                 ))}
@@ -429,9 +490,6 @@ export function Leitor({ livroId }: { livroId: string }) {
                   <small>Os outros livros seguem o modo padrão.</small>
                 </span>
               </label>
-              {horizontal && modo !== 'unica' && (
-                <p className="painel-nota">Este livro é horizontal, então aparece uma página por vez. Os modos próprios para ele chegam na versão 1.2.</p>
-              )}
 
               <fieldset className="opcoes">
                 <legend>Cor das páginas</legend>

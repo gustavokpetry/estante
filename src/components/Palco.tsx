@@ -11,8 +11,11 @@ import {
 } from 'react'
 import {
   calcularDobra,
+  calcularDobraNoTopo,
   cantoDaFolha,
+  cantoNoTopo,
   cantoOposto,
+  cantoOpostoNoTopo,
   degradeAPartirDaReta,
   poligonoCss,
   type Canto,
@@ -40,6 +43,8 @@ interface Props {
   aoMudarPagina: (pagina: number) => void
   /** Duas páginas lado a lado (true) ou uma por vez (false). */
   duas: boolean
+  /** Onde fica a lombada: 'lado' (livro comum) ou 'topo' (bloco, calendário de mesa). */
+  eixo: 'lado' | 'topo'
   /** Tamanho de uma página na tela, em pixels CSS, com zoom 1. */
   largura: number
   altura: number
@@ -79,7 +84,7 @@ function prefereMenosMovimento(): boolean {
 }
 
 export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
-  { cache, total, pagina, aoMudarPagina, duas, largura, altura, tresD, filtro, aoMudarZoom },
+  { cache, total, pagina, aoMudarPagina, duas, eixo, largura, altura, tresD, filtro, aoMudarZoom },
   ref,
 ) {
   const [zoom, setZoom] = useState(1)
@@ -106,6 +111,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
   const pendente = useRef<1 | -1 | null>(null)
   const engoleClique = useRef(false)
 
+  const noTopo = eixo === 'topo'
   const dobraAtiva = tresD && zoom === 1
   const L = largura
   const A = altura
@@ -160,7 +166,9 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
       const v = viradaAtual.current
       if (!v) return
       pontoAtual.current = p
-      const d = calcularDobra({ largura: L, altura: A, lado: v.lado, canto: v.canto, p })
+      const d = noTopo
+        ? calcularDobraNoTopo({ largura: L, altura: A, canto: v.canto, p })
+        : calcularDobra({ largura: L, altura: A, lado: v.lado, canto: v.canto, p })
       const elFrente = frente.current
       const elSombra = sombra.current
       const elCaixa = versoCaixa.current
@@ -213,7 +221,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
         ])
       }
     },
-    [L, A],
+    [L, A, noTopo],
   )
 
   const pararAnimacao = useCallback((concluir: boolean) => {
@@ -247,9 +255,11 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
       const passo = (agora: number) => {
         const bruto = limitar((agora - comeco) / duracao, 0, 1)
         const t = emArco ? suave(bruto) : freio(bruto)
+        // O arco afasta o canto da borda enquanto a folha passa pelo meio da virada.
+        const arco = emArco ? sinal * Math.sin(Math.PI * t) * 0.2 : 0
         const p = {
-          x: de.x + (alvo.x - de.x) * t,
-          y: de.y + (alvo.y - de.y) * t + (emArco ? sinal * Math.sin(Math.PI * t) * A * 0.2 : 0),
+          x: de.x + (alvo.x - de.x) * t + (noTopo ? arco * L : 0),
+          y: de.y + (alvo.y - de.y) * t + (noTopo ? 0 : arco * A),
         }
         desenharDobra(p)
         if (bruto < 1) {
@@ -261,7 +271,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
       }
       animacao.current = { quadro: requestAnimationFrame(passo), aoFim }
     },
-    [A, desenharDobra],
+    [L, A, noTopo, desenharDobra],
   )
 
   const montarVirada = useCallback(
@@ -295,6 +305,9 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
           destino,
         }
       }
+      // Uma página por vez: a folha sai pela lombada (à esquerda, ou acima no modo topo).
+      const noLugar = noTopo ? cantoNoTopo(L, A, canto) : cantoDaFolha(L, A, 1, canto)
+      const virada = noTopo ? cantoOpostoNoTopo(L, A, canto) : cantoOposto(L, A, 1, canto)
       if (direcao === 1) {
         if (pagina >= total) return null
         return {
@@ -303,25 +316,25 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
           frente: pagina,
           verso: null,
           fundo: pagina + 1,
-          inicio: cantoDaFolha(L, A, 1, canto),
-          fim: cantoOposto(L, A, 1, canto),
+          inicio: noLugar,
+          fim: virada,
           destino: pagina + 1,
         }
       }
       if (pagina <= 1) return null
-      // Em página única, voltar é a folha anterior retornando da esquerda.
+      // Voltar é a folha anterior retornando de onde saiu.
       return {
         lado: 1,
         canto,
         frente: pagina - 1,
         verso: null,
         fundo: pagina,
-        inicio: cantoOposto(L, A, 1, canto),
-        fim: cantoDaFolha(L, A, 1, canto),
+        inicio: virada,
+        fim: noLugar,
         destino: pagina - 1,
       }
     },
-    [duas, pagina, total, L, A],
+    [duas, noTopo, pagina, total, L, A],
   )
 
   const iniciarVirada = useCallback((v: Virada, p: Ponto) => {
@@ -409,7 +422,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
       viradaAtual.current = null
       setVirada(null)
     }
-  }, [L, A, duas, dobraAtiva, pararAnimacao])
+  }, [L, A, duas, noTopo, dobraAtiva, pararAnimacao])
 
   // --- Gestos ---------------------------------------------------------------
 
@@ -422,7 +435,8 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
     if (e.button !== 0 || pinca.current) return
     engoleClique.current = false
     const p = pontoNoPalco(e)
-    const direcao: 1 | -1 = duas ? (p.x < 0 ? -1 : 1) : p.x < L * 0.3 ? -1 : 1
+    // Onde o toque cai decide o sentido: perto da lombada volta, no resto avança.
+    const direcao: 1 | -1 = duas ? (p.x < 0 ? -1 : 1) : (noTopo ? p.y < A * 0.3 : p.x < L * 0.3) ? -1 : 1
     gesto.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), direcao, arrastando: false }
     // Sobre os botões das bordas não capturamos o ponteiro, para o clique deles funcionar.
     const sobreBotao = (e.target as HTMLElement).closest('button') !== null
@@ -453,7 +467,8 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
         return
       }
       const p = pontoNoPalco(e)
-      const v = montarVirada(g.direcao, p.y > A / 2 ? 'base' : 'topo')
+      const metade = noTopo ? p.x > L / 2 : p.y > A / 2
+      const v = montarVirada(g.direcao, metade ? 'base' : 'topo')
       if (!v) {
         gesto.current = null
         return
@@ -489,9 +504,11 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
     if (cancelado) return
 
     const rapido = performance.now() - g.t0 < 600
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && rapido) {
+    // Deslizar o dedo: para os lados no livro comum, para cima e para baixo no modo topo.
+    const [principal, outro] = noTopo ? [dy, dx] : [dx, dy]
+    if (Math.abs(principal) > 45 && Math.abs(principal) > Math.abs(outro) * 1.5 && rapido) {
       engoleClique.current = true // se o gesto começou sobre um botão, não conta também como clique
-      irPara(dx < 0 ? 1 : -1) // deslizar o dedo
+      irPara(principal < 0 ? 1 : -1)
     } else if (Math.hypot(dx, dy) < 8 && dobraAtiva) {
       irPara(g.direcao) // toque simples na página
     }
@@ -586,7 +603,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
   const estiloFolha: CSSProperties = { width: Lz, height: Az }
   const classes = [
     'livro-aberto',
-    duas ? 'livro-duas' : 'livro-uma',
+    duas ? 'livro-duas' : noTopo ? 'livro-topo' : 'livro-uma',
     `filtro-${filtro}`,
     zoom > 1 ? 'com-zoom' : '',
     dobraAtiva ? 'com-dobra' : '',
@@ -605,7 +622,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
           onPointerCancel={aoSoltar}
         >
           {/* No modo com dobra as folhas nunca são recriadas: um gesto em andamento (a pinça, por exemplo) perderia o alvo. */}
-          <div key={tresD ? 'fixo' : pagina} className={`folhas${tresD ? '' : sentido === 1 ? ' entra-frente' : ' entra-tras'}`}>
+          <div key={tresD ? 'fixo' : pagina} className={`folhas${tresD ? '' : `${sentido === 1 ? ' entra-frente' : ' entra-tras'}${noTopo ? ' entra-vertical' : ''}`}`}>
             {duas ? (
               <>
                 <div className="folha folha-esquerda" style={{ ...estiloFolha, visibility: abertura.esquerda && !escondeEsquerda ? 'visible' : 'hidden' }}>
@@ -647,10 +664,10 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
 
           {mostraBordas && (
             <>
-              <button type="button" className="borda borda-esquerda" onClick={() => aoClicarBorda(-1)} disabled={!podeVoltar} aria-label="Página anterior">
+               <button type="button" className={`borda ${noTopo ? 'borda-cima' : 'borda-esquerda'}`} onClick={() => aoClicarBorda(-1)} disabled={!podeVoltar} aria-label="Página anterior">
                 <span aria-hidden="true">‹</span>
               </button>
-              <button type="button" className="borda borda-direita" onClick={() => aoClicarBorda(1)} disabled={!podeAvancar} aria-label="Próxima página">
+              <button type="button" className={`borda ${noTopo ? 'borda-baixo' : 'borda-direita'}`} onClick={() => aoClicarBorda(1)} disabled={!podeAvancar} aria-label="Próxima página">
                 <span aria-hidden="true">›</span>
               </button>
             </>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { db, excluirLivro } from '../lib/db'
 import { formatarBytes, formatarData, plural } from '../lib/formato'
-import type { Livro } from '../lib/types'
+import type { Livro, ModoHorizontal, Orientacao } from '../lib/types'
 import { Dialogo } from './Dialogo'
 import { useCapa } from './useCapa'
 
@@ -64,6 +64,37 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
             />
           </label>
 
+          <div className="campos-lado-a-lado">
+            <label className="campo">
+              <span>Formato das páginas</span>
+              <select
+                value={livro.orientacao}
+                onChange={(e) => void db.livros.update(livro.id, { orientacao: e.target.value as Orientacao })}
+              >
+                <option value="vertical">Vertical (em pé)</option>
+                <option value="horizontal">Horizontal (deitado)</option>
+              </select>
+            </label>
+            {livro.orientacao === 'horizontal' && (
+              <label className="campo">
+                <span>Como o livro abre</span>
+                <select
+                  value={livro.modoHorizontal ?? 'auto'}
+                  onChange={(e) =>
+                    void db.livros.update(livro.id, {
+                      modoHorizontal: e.target.value === 'auto' ? null : (e.target.value as ModoHorizontal),
+                    })
+                  }
+                >
+                  <option value="auto">Automático</option>
+                  <option value="topo">Encadernação no topo</option>
+                  <option value="uma">Uma página por vez</option>
+                  <option value="duas">Duas páginas lado a lado</option>
+                </select>
+              </label>
+            )}
+          </div>
+
           <dl className="ficha">
             <div>
               <dt>Tamanho</dt>
@@ -79,10 +110,6 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
                 </dd>
               </div>
             )}
-            <div>
-              <dt>Formato</dt>
-              <dd>{livro.orientacao === 'horizontal' ? 'Horizontal (páginas deitadas)' : 'Vertical'}</dd>
-            </div>
             <div>
               <dt>Adicionado em</dt>
               <dd>{formatarData(livro.adicionadoEm)}</dd>

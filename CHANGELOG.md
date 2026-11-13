@@ -1,5 +1,18 @@
 # Histórico de versões
 
+## 1.2 (12 de novembro de 2026)
+
+Livros horizontais.
+
+- Três jeitos de abrir um livro de páginas deitadas, escolhidos por livro:
+  - **Encadernação no topo:** a página sobe e some atrás do bloco, como num calendário de mesa. Vale arrastar pelos cantos de baixo, tocar, deslizar para cima e para baixo ou usar as setas ↓ e ↑.
+  - **Uma página por vez:** a página vira para o lado.
+  - **Duas páginas lado a lado:** como um álbum aberto.
+- No automático, o app usa duas páginas só em telas bem largas; nas demais, uma por vez. A escolha manual é sempre respeitada.
+- A escolha fica em "Aparência", dentro do leitor, e também nos detalhes do livro.
+- Nos detalhes do livro dá para marcar qualquer livro como vertical ou horizontal, caso a detecção automática erre.
+- Em livros horizontais, a virada com dobra e a troca simples funcionam nos três jeitos de abrir.
+
 ## 1.1 (12 de novembro de 2026)
 
 O leitor.
