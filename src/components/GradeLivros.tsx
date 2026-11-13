@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react'
+import { progressoDe } from '../lib/filtros'
 import type { Livro } from '../lib/types'
-import { IconeDetalhes } from './Icones'
-import { useCapa } from './useCapa'
+import { EstrelasFixas } from './Estrelas'
+import { IconeCerto, IconeDetalhes } from './Icones'
+import { useCapa, versaoDaCapa } from './useCapa'
 
 interface Props {
   livros: Livro[]
@@ -10,26 +12,27 @@ interface Props {
 }
 
 /** Limita proporções extremas para a prateleira não ficar desalinhada. */
-function proporcaoNaEstante(p: number): number {
+export function proporcaoNaEstante(p: number): number {
   return Math.min(1.6, Math.max(0.55, p || 0.7))
 }
 
-export function progressoDe(livro: Livro): number {
-  if (livro.ultimaLeitura === null || livro.totalPaginas <= 1) return 0
-  return Math.min(1, Math.max(0, (livro.paginaAtual - 1) / (livro.totalPaginas - 1)))
-}
-
 function CartaoLivro({ livro, aoAbrir, aoVerDetalhes }: { livro: Livro } & Omit<Props, 'livros'>) {
-  const capa = useCapa(livro.id)
+  const capa = useCapa(livro.id, versaoDaCapa(livro))
   const progresso = progressoDe(livro)
   const estilo = { '--proporcao': proporcaoNaEstante(livro.proporcaoCapa) } as CSSProperties
+  const lido = livro.status === 'lido'
 
   return (
     <li className="livro" style={estilo}>
       <button type="button" className="livro-botao" onClick={() => aoAbrir(livro.id)} aria-label={`Ler ${livro.titulo}`}>
         <span className="capa">
           {capa ? <img src={capa} alt="" draggable={false} /> : <span className="capa-espera" />}
-          {progresso > 0 && (
+          {lido && (
+            <span className="capa-selo" title="Lido">
+              <IconeCerto width={14} height={14} />
+            </span>
+          )}
+          {!lido && progresso > 0 && (
             <span className="capa-progresso" aria-hidden="true">
               <span style={{ width: `${Math.max(3, Math.round(progresso * 100))}%` }} />
             </span>
@@ -40,6 +43,7 @@ function CartaoLivro({ livro, aoAbrir, aoVerDetalhes }: { livro: Livro } & Omit<
         <div className="livro-textos">
           <span className="livro-titulo">{livro.titulo}</span>
           {livro.autor && <span className="livro-autor">{livro.autor}</span>}
+          {livro.avaliacao !== null && <EstrelasFixas valor={livro.avaliacao} />}
         </div>
         <button
           type="button"

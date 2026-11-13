@@ -6,6 +6,9 @@ describe('lerRota', () => {
   it('reconhece o leitor', () => {
     expect(lerRota(`#/ler/${id}`)).toEqual({ tela: 'leitor', livroId: id })
   })
+  it('reconhece as estatísticas', () => {
+    expect(lerRota('#/estatisticas')).toEqual({ tela: 'estatisticas' })
+  })
   it('qualquer outra coisa é a estante', () => {
     expect(lerRota('')).toEqual({ tela: 'estante' })
     expect(lerRota('#/')).toEqual({ tela: 'estante' })

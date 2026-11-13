@@ -51,6 +51,8 @@ interface Props {
   /** Virada com dobra (true) ou troca simples (false). */
   tresD: boolean
   filtro: FiltroPagina
+  /** Modo anotação: as páginas ficam paradas para o texto poder ser selecionado. */
+  anotando: boolean
   aoMudarZoom: (zoom: number) => void
 }
 
@@ -84,7 +86,7 @@ function prefereMenosMovimento(): boolean {
 }
 
 export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
-  { cache, total, pagina, aoMudarPagina, duas, eixo, largura, altura, tresD, filtro, aoMudarZoom },
+  { cache, total, pagina, aoMudarPagina, duas, eixo, largura, altura, tresD, filtro, anotando, aoMudarZoom },
   ref,
 ) {
   const [zoom, setZoom] = useState(1)
@@ -112,7 +114,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
   const engoleClique = useRef(false)
 
   const noTopo = eixo === 'topo'
-  const dobraAtiva = tresD && zoom === 1
+  const dobraAtiva = tresD && zoom === 1 && !anotando
   const L = largura
   const A = altura
   const abertura = aberturaDe(pagina, total)
@@ -432,7 +434,8 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
   }
 
   function aoApertar(e: EventoPonteiro<HTMLDivElement>) {
-    if (e.button !== 0 || pinca.current) return
+    // No modo anotação o gesto é do navegador: selecionar texto.
+    if (e.button !== 0 || pinca.current || anotando) return
     engoleClique.current = false
     const p = pontoNoPalco(e)
     // Onde o toque cai decide o sentido: perto da lombada volta, no resto avança.
@@ -597,7 +600,7 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
   const escondeDireita = virada !== null && (duas ? virada.lado === 1 : true)
   const podeVoltar = paginaAnterior(pagina, total, duas) !== null
   const podeAvancar = proximaPagina(pagina, total, duas) !== null
-  const mostraBordas = !dobraAtiva && zoom === 1
+  const mostraBordas = !dobraAtiva && zoom === 1 && !anotando
 
   const estiloLivro: CSSProperties = { width: (duas ? 2 : 1) * Lz, height: Az }
   const estiloFolha: CSSProperties = { width: Lz, height: Az }
@@ -607,10 +610,11 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
     `filtro-${filtro}`,
     zoom > 1 ? 'com-zoom' : '',
     dobraAtiva ? 'com-dobra' : '',
+    anotando ? 'anotando' : '',
   ].join(' ')
 
   return (
-    <div ref={rolagem} className={`palco${zoom > 1 ? ' palco-zoom' : ''}`}>
+    <div ref={rolagem} className={`palco${zoom > 1 ? ' palco-zoom' : ''}${anotando ? ' palco-anotando' : ''}`}>
       <div className="palco-centro">
         <div
           ref={livro}
@@ -626,16 +630,16 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
             {duas ? (
               <>
                 <div className="folha folha-esquerda" style={{ ...estiloFolha, visibility: abertura.esquerda && !escondeEsquerda ? 'visible' : 'hidden' }}>
-                  {abertura.esquerda && <PaginaTela cache={cache} numero={abertura.esquerda} largura={larguraPx} />}
+                  {abertura.esquerda && <PaginaTela cache={cache} numero={abertura.esquerda} largura={larguraPx} caixaLargura={Lz} caixaAltura={Az} interativa />}
                 </div>
                 <div className="folha folha-direita" style={{ ...estiloFolha, visibility: abertura.direita && !escondeDireita ? 'visible' : 'hidden' }}>
-                  {abertura.direita && <PaginaTela cache={cache} numero={abertura.direita} largura={larguraPx} />}
+                  {abertura.direita && <PaginaTela cache={cache} numero={abertura.direita} largura={larguraPx} caixaLargura={Lz} caixaAltura={Az} interativa />}
                 </div>
                 {abertura.esquerda && abertura.direita && !virada && <div className="vinco" />}
               </>
             ) : (
               <div className="folha" style={{ ...estiloFolha, visibility: escondeDireita ? 'hidden' : 'visible' }}>
-                <PaginaTela cache={cache} numero={pagina} largura={larguraPx} />
+                <PaginaTela cache={cache} numero={pagina} largura={larguraPx} caixaLargura={Lz} caixaAltura={Az} interativa />
               </div>
             )}
           </div>
@@ -644,18 +648,18 @@ export const Palco = forwardRef<ControlesPalco, Props>(function Palco(
             <div className="virada" style={{ left: duas ? L : 0 }}>
               {virada.fundo !== null && (
                 <div className="folha virada-peca" style={{ left: virada.lado > 0 ? 0 : -L, width: L, height: A }}>
-                  <PaginaTela cache={cache} numero={virada.fundo} largura={larguraPx} />
+                  <PaginaTela cache={cache} numero={virada.fundo} largura={larguraPx} caixaLargura={L} caixaAltura={A} />
                 </div>
               )}
               {virada.fundo !== null && (
                 <div ref={sombra} className="virada-peca virada-sombra" style={{ left: virada.lado > 0 ? 0 : -L, width: L, height: A }} />
               )}
               <div ref={frente} className="folha virada-peca" style={{ left: virada.lado > 0 ? 0 : -L, width: L, height: A }}>
-                {virada.frente !== null && <PaginaTela cache={cache} numero={virada.frente} largura={larguraPx} />}
+                {virada.frente !== null && <PaginaTela cache={cache} numero={virada.frente} largura={larguraPx} caixaLargura={L} caixaAltura={A} />}
               </div>
               <div ref={versoCaixa} className="virada-verso-caixa">
                 <div ref={verso} className="folha virada-verso" style={{ width: L, height: A }}>
-                  {virada.verso !== null && <PaginaTela cache={cache} numero={virada.verso} largura={larguraPx} />}
+                  {virada.verso !== null && <PaginaTela cache={cache} numero={virada.verso} largura={larguraPx} caixaLargura={L} caixaAltura={A} />}
                   <div ref={brilho} className="virada-brilho" />
                 </div>
               </div>

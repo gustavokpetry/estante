@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { abrirEstatisticas } from '../lib/rota'
 import { aplicarTema, temaSalvo } from '../lib/tema'
 import type { Tema } from '../lib/types'
-import { IconeAuto, IconeInfo, IconeLua, IconeMais, IconeSol } from './Icones'
+import { IconeAuto, IconeGrafico, IconeInfo, IconeLua, IconeMais, IconeSol } from './Icones'
 
 const ORDEM: Tema[] = ['auto', 'claro', 'escuro']
 const ROTULO: Record<Tema, string> = {
@@ -33,22 +34,13 @@ export function Cabecalho({ aoAdicionar, aoAbrirSobre }: Props) {
             <IconeMais />
             <span>Adicionar PDFs</span>
           </button>
-          <button
-            type="button"
-            className="botao-icone"
-            onClick={alternarTema}
-            aria-label={`${ROTULO[tema]}. Trocar tema`}
-            title={ROTULO[tema]}
-          >
+          <button type="button" className="botao-icone" onClick={abrirEstatisticas} aria-label="Estatísticas de leitura" title="Estatísticas de leitura">
+            <IconeGrafico />
+          </button>
+          <button type="button" className="botao-icone" onClick={alternarTema} aria-label={`${ROTULO[tema]}. Trocar tema`} title={ROTULO[tema]}>
             {tema === 'auto' ? <IconeAuto /> : tema === 'claro' ? <IconeSol /> : <IconeLua />}
           </button>
-          <button
-            type="button"
-            className="botao-icone"
-            onClick={aoAbrirSobre}
-            aria-label="Sobre o app e armazenamento"
-            title="Sobre o app e armazenamento"
-          >
+          <button type="button" className="botao-icone" onClick={aoAbrirSobre} aria-label="Backup, armazenamento e sobre o app" title="Backup, armazenamento e sobre o app">
             <IconeInfo />
           </button>
         </div>

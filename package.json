@@ -1,7 +1,7 @@
 {
   "name": "estante",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.7.0",
   "type": "module",
   "description": "Biblioteca pessoal de PDFs com leitura em formato de livro",
   "scripts": {
@@ -18,6 +18,7 @@
     "@fontsource/alegreya-sans": "^5.3.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
+    "fflate": "^0.8.3",
     "pdfjs-dist": "^6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

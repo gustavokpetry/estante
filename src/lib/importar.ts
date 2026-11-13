@@ -1,3 +1,4 @@
+import { corDaCapa } from './capas'
 import { db } from './db'
 import { autorConfiavel, tituloConfiavel, tituloDoArquivo } from './formato'
 import { sha256Hex } from './hash'
@@ -48,6 +49,7 @@ export async function importarPdf(arquivo: File): Promise<ResultadoImportacao> {
     const meta = await lerMetadados(pdf)
     const orientacao = await detectarOrientacao(pdf)
     const capa = await gerarCapa(pdf)
+    const corLombada = await corDaCapa(capa.blob)
 
     const livro: Livro = {
       id,
@@ -68,6 +70,9 @@ export async function importarPdf(arquivo: File): Promise<ResultadoImportacao> {
       tags: [],
       colecoesIds: [],
       temTexto: null,
+      modoLeitura: null,
+      parametrosCapa: null,
+      corLombada,
     }
 
     await db.transaction('rw', db.livros, db.arquivos, db.capas, async () => {

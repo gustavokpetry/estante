@@ -1,5 +1,40 @@
 # Histórico de versões
 
+## 1.7 (12 de novembro de 2026)
+
+Esta entrega reúne as etapas 1.3 a 1.7 do plano.
+
+**Capas e visuais da estante (etapa 1.3)**
+- Capa de cada livro à escolha: primeira página do PDF, uma imagem (com zoom e posição) ou uma capa criada no app.
+- Capa criada: título, autor, cor de fundo e 4 modelos (clássico, minimalista, faixa, geométrico). Dá para reeditar depois.
+- Dois visuais novos além da grade: estante de madeira e lombadas. Na lombada, a espessura acompanha o número de
+  páginas e a cor vem da capa; ao passar o mouse ou tocar, o livro gira e mostra a capa. No toque, o segundo toque abre.
+
+**Organização (etapa 1.4)**
+- Coleções (um livro pode estar em várias) e tags livres com sugestão das já usadas.
+- Status de leitura: quero ler, lendo, lido. Ao chegar à última página, o app pergunta se quer marcar como lido.
+- Avaliação de meia em meia estrela.
+- Busca por título ou autor, filtros por coleção, tag, status e avaliação, e cinco ordenações.
+
+**Anotações (etapa 1.5)**
+- Marcadores de página com nome, e uma fita no canto da página marcada.
+- Notas de texto por página.
+- Destaques em 4 cores com nota opcional. Para destacar, ligue o modo anotação (ícone de caneta): as páginas param
+  de virar com o toque e o texto fica selecionável. Os destaques aparecem em todos os modos de leitura.
+- Painel de anotações com tudo do livro e salto até cada item.
+
+**Busca no texto e estatísticas (etapa 1.6)**
+- Busca dentro do livro, ignorando acentos e maiúsculas, com trecho, número da página e realce do termo.
+- O texto é preparado em segundo plano depois que o livro entra na estante; o rodapé mostra o andamento.
+- PDFs só de imagem são detectados e avisam que não têm busca.
+- Tela de estatísticas: tempo total, páginas lidas, dias seguidos, gráfico dos últimos 30 dias, tempo por livro
+  e distribuição das avaliações. O tempo só conta com o livro aberto, a aba à vista e atividade recente.
+
+**Backup (etapa 1.7)**
+- Exportar tudo em um .zip, ou só os dados e as capas, sem os PDFs.
+- Importar mescla com a biblioteca atual: nada é apagado e nenhum livro duplica.
+- O backup fica em "Sobre" (ícone de informação no topo).
+
 ## 1.2 (12 de novembro de 2026)
 
 Livros horizontais.

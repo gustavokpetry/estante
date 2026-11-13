@@ -1,24 +1,75 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { db, salvarConfiguracao } from '../lib/db'
-import { paginaCanonica, rotuloPaginas } from '../lib/folhas'
+import { db, novoId, salvarConfiguracao } from '../lib/db'
+import { registrarLeitura } from '../lib/estatisticas'
+import { aberturaDe, paginaCanonica, rotuloPaginas } from '../lib/folhas'
 import { CachePaginas } from '../lib/paginas'
 import { abrirPdf, FalhaAoAbrirPdf, type PdfAberto } from '../lib/pdf'
 import { voltarParaEstante } from '../lib/rota'
+import { retangulosDoTermo } from '../lib/realce'
 import { lerSumario, paginaDoDestino, type ItemSumario } from '../lib/sumario'
-import type { FiltroPagina, Livro, ModoHorizontal, ModoLeitura } from '../lib/types'
+import { juntarRetangulos, normalizar } from '../lib/texto'
+import type { CorDestaque, Destaque, FiltroPagina, Livro, ModoHorizontal, ModoLeitura, Retangulo } from '../lib/types'
+import { ContextoPagina, type DadosDaLeitura } from './ContextoPagina'
 import {
+  IconeAnotacoes,
   IconeAparencia,
   IconeAvancar,
+  IconeBusca,
+  IconeCaneta,
   IconeFechar,
   IconeMais,
+  IconeMarcador,
   IconeMenos,
   IconeSairTelaCheia,
   IconeSumario,
   IconeTelaCheia,
   IconeVoltar,
 } from './Icones'
+import { CORES_DESTAQUE, PainelAnotacoes } from './PainelAnotacoes'
+import { PainelBusca } from './PainelBusca'
 import { Palco, ZOOM_MAXIMO, type ControlesPalco } from './Palco'
+
+type Painel = 'nenhum' | 'aparencia' | 'sumario' | 'anotacoes' | 'busca'
+
+/** Trecho selecionado no modo anotação, pronto para virar destaque. */
+interface Selecao {
+  pagina: number
+  retangulos: Retangulo[]
+  texto: string
+  x: number
+  y: number
+}
+
+/** Lê a seleção do navegador e a converte em frações da página onde ela começa. */
+function lerSelecao(): Selecao | null {
+  const sel = window.getSelection()
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null
+  const faixa = sel.getRangeAt(0)
+  const no = faixa.startContainer
+  const inicio = no.nodeType === Node.ELEMENT_NODE ? (no as Element) : no.parentElement
+  const caixa = inicio?.closest<HTMLElement>('.pagina-caixa')
+  if (!caixa || !inicio?.closest('.textLayer')) return null
+  const base = caixa.getBoundingClientRect()
+  const pedacos: Retangulo[] = []
+  for (const r of faixa.getClientRects()) {
+    const cx = r.left + r.width / 2
+    const cy = r.top + r.height / 2
+    // Uma seleção pode invadir a página vizinha: fica só o que está nesta.
+    if (r.width < 1 || r.height < 1 || cx < base.left || cx > base.right || cy < base.top || cy > base.bottom) continue
+    pedacos.push({
+      x: (r.left - base.left) / base.width,
+      y: (r.top - base.top) / base.height,
+      l: r.width / base.width,
+      a: r.height / base.height,
+    })
+  }
+  const retangulos = juntarRetangulos(pedacos)
+  const texto = sel.toString().replace(/\s+/g, ' ').trim()
+  if (retangulos.length === 0 || !texto) return null
+  const fim = faixa.getBoundingClientRect()
+  return { pagina: Number(caixa.dataset.numero), retangulos, texto, x: fim.left + fim.width / 2, y: fim.bottom }
+}
 
 interface Aberto {
   livro: Livro
@@ -55,7 +106,13 @@ export function Leitor({ livroId }: { livroId: string }) {
   const [erro, setErro] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
   const [zoom, setZoom] = useState(1)
-  const [painel, setPainel] = useState<'nenhum' | 'aparencia' | 'sumario'>('nenhum')
+  const [painel, setPainel] = useState<Painel>('nenhum')
+  const [anotando, setAnotando] = useState(false)
+  const [selecao, setSelecao] = useState<Selecao | null>(null)
+  const [destaqueEmFoco, setDestaqueEmFoco] = useState<string | null>(null)
+  const [termoBusca, setTermoBusca] = useState('')
+  const [realces, setRealces] = useState<Map<number, Retangulo[]>>(new Map())
+  const [fimDispensado, setFimDispensado] = useState(false)
   const [sumario, setSumario] = useState<ItemSumario[]>([])
   const [telaCheia, setTelaCheia] = useState(false)
   const [espaco, setEspaco] = useState({ largura: 0, altura: 0 })
@@ -76,6 +133,9 @@ export function Leitor({ livroId }: { livroId: string }) {
     () => db.configuracoes.get('filtroPagina').then((c) => (c?.valor as FiltroPagina | undefined) ?? 'nenhum'),
     [],
   )
+  const marcadores = useLiveQuery(() => db.marcadores.where('livroId').equals(livroId).sortBy('pagina'), [livroId]) ?? []
+  const notas = useLiveQuery(() => db.notas.where('livroId').equals(livroId).sortBy('pagina'), [livroId]) ?? []
+  const destaques = useLiveQuery(() => db.destaques.where('livroId').equals(livroId).sortBy('pagina'), [livroId]) ?? []
 
   // --- Abrir o livro --------------------------------------------------------
 
@@ -225,6 +285,150 @@ export function Leitor({ livroId }: { livroId: string }) {
     return () => clearTimeout(espera)
   }, [pagina, aberto, livroId])
 
+  // --- O que está na tela ---------------------------------------------------
+
+  const visiveis = useMemo(() => {
+    if (!duas) return [pagina]
+    const { esquerda, direita } = aberturaDe(pagina, total)
+    return [esquerda, direita].filter((n): n is number => n !== null)
+  }, [pagina, total, duas])
+
+  // --- Tempo de leitura (estatísticas) -------------------------------------
+
+  const medidor = useRef({ segundos: 0, paginas: 0, ultimoToque: 0, ultimaMarca: 0, vistas: new Set<number>() })
+
+  useEffect(() => {
+    if (!aberto) return
+    const m = medidor.current
+    m.ultimoToque = m.ultimaMarca = Date.now()
+    m.vistas = new Set()
+    const tocar = () => {
+      m.ultimoToque = Date.now()
+    }
+    const gravar = () => {
+      const segundos = Math.round(m.segundos)
+      if (segundos < 1 && m.paginas === 0) return
+      void registrarLeitura(livroId, segundos, m.paginas)
+      m.segundos -= segundos
+      m.paginas = 0
+    }
+    const contar = () => {
+      const agora = Date.now()
+      const passou = Math.min(10, (agora - m.ultimaMarca) / 1000)
+      m.ultimaMarca = agora
+      // Só conta com a aba à vista e com algum sinal de vida nos últimos 2 minutos.
+      if (document.visibilityState === 'visible' && agora - m.ultimoToque < 120_000) m.segundos += passou
+      if (m.segundos >= 30) gravar()
+    }
+    const relogio = setInterval(contar, 5000)
+    const aoEsconder = () => {
+      contar()
+      gravar()
+    }
+    const eventos = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
+    eventos.forEach((e) => window.addEventListener(e, tocar, { passive: true }))
+    document.addEventListener('visibilitychange', aoEsconder)
+    return () => {
+      clearInterval(relogio)
+      eventos.forEach((e) => window.removeEventListener(e, tocar))
+      document.removeEventListener('visibilitychange', aoEsconder)
+      contar()
+      gravar()
+    }
+  }, [aberto, livroId])
+
+  // Cada página nova que aparece conta como lida (a de abertura não conta).
+  useEffect(() => {
+    const m = medidor.current
+    const primeira = m.vistas.size === 0
+    for (const n of visiveis) {
+      if (m.vistas.has(n)) continue
+      m.vistas.add(n)
+      if (!primeira) m.paginas++
+    }
+    m.ultimoToque = Date.now()
+  }, [visiveis])
+
+  // --- Anotações ------------------------------------------------------------
+
+  const alternarMarcador = useCallback(async () => {
+    const existentes = await db.marcadores.where('livroId').equals(livroId).toArray()
+    const naTela = existentes.filter((m) => visiveis.includes(m.pagina))
+    if (naTela.length > 0) await db.marcadores.bulkDelete(naTela.map((m) => m.id))
+    else await db.marcadores.add({ id: novoId(), livroId, pagina: visiveis[0], nome: `Página ${visiveis[0]}`, criadoEm: Date.now() })
+  }, [livroId, visiveis])
+
+  // No modo anotação, acompanha o texto selecionado para oferecer as cores.
+  useEffect(() => {
+    if (!anotando) {
+      setSelecao(null)
+      return
+    }
+    let espera: ReturnType<typeof setTimeout>
+    const aoMudar = () => {
+      clearTimeout(espera)
+      espera = setTimeout(() => setSelecao(lerSelecao()), 180)
+    }
+    document.addEventListener('selectionchange', aoMudar)
+    return () => {
+      clearTimeout(espera)
+      document.removeEventListener('selectionchange', aoMudar)
+    }
+  }, [anotando])
+
+  const destacar = async (cor: CorDestaque, comNota: boolean) => {
+    if (!selecao) return
+    const novo: Destaque = {
+      id: novoId(),
+      livroId,
+      pagina: selecao.pagina,
+      retangulos: selecao.retangulos,
+      texto: selecao.texto.slice(0, 2000),
+      cor,
+      nota: '',
+      criadoEm: Date.now(),
+    }
+    await db.destaques.add(novo)
+    window.getSelection()?.removeAllRanges()
+    setSelecao(null)
+    if (comNota) {
+      setDestaqueEmFoco(novo.id)
+      setPainel('anotacoes')
+    }
+  }
+
+  // Realce do termo buscado nas páginas visíveis, enquanto a busca está aberta.
+  useEffect(() => {
+    const alvo = normalizar(termoBusca.trim())
+    if (!aberto || painel !== 'busca' || alvo.length < 2) {
+      setRealces((atual) => (atual.size === 0 ? atual : new Map()))
+      return
+    }
+    let vivo = true
+    void Promise.all(visiveis.map(async (n) => [n, await retangulosDoTermo(aberto.pdf.doc, n, alvo)] as const)).then((pares) => {
+      if (vivo) setRealces(new Map(pares))
+    })
+    return () => {
+      vivo = false
+    }
+  }, [aberto, painel, termoBusca, visiveis])
+
+  const dadosDaLeitura = useMemo<DadosDaLeitura>(() => {
+    const porPagina = new Map<number, Destaque[]>()
+    for (const d of destaques) porPagina.set(d.pagina, [...(porPagina.get(d.pagina) ?? []), d])
+    return {
+      doc: aberto?.pdf.doc ?? null,
+      destaques: porPagina,
+      realces,
+      marcadas: new Set(marcadores.map((m) => m.pagina)),
+      anotando,
+      aoTocarDestaque: (id: string) => {
+        setDestaqueEmFoco(id)
+        setPainel('anotacoes')
+      },
+    }
+  }, [aberto, destaques, realces, marcadores, anotando])
+
   // --- Zoom e tela cheia ----------------------------------------------------
 
   const maisZoom = () => palco.current?.definirZoom(PASSOS_ZOOM.find((z) => z > zoom + 0.01) ?? ZOOM_MAXIMO)
@@ -248,6 +452,10 @@ export function Leitor({ livroId }: { livroId: string }) {
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && painel !== 'nenhum') {
         setPainel('nenhum')
+        return
+      }
+      if (e.key === 'Escape' && anotando) {
+        setAnotando(false)
         return
       }
       const alvo = e.target as HTMLElement
@@ -351,6 +559,11 @@ export function Leitor({ livroId }: { livroId: string }) {
 
   const titulo = livro?.titulo ?? aberto?.livro.titulo ?? ''
   const tresD = modo === '3d'
+  const alternarPainel = (qual: Painel) => setPainel(painel === qual ? 'nenhum' : qual)
+  const paginaMarcada = marcadores.some((m) => visiveis.includes(m.pagina))
+  const semTexto = (livro ?? aberto?.livro)?.temTexto === false
+  const noFim = aberto !== null && total > 1 && paginaCanonica(total, total, duas) === pagina
+  const sugerirLido = noFim && !fimDispensado && livro !== undefined && livro.status !== 'lido'
 
   return (
     <div className="leitor">
@@ -367,18 +580,46 @@ export function Leitor({ livroId }: { livroId: string }) {
               aria-label="Sumário"
               title="Sumário"
               aria-expanded={painel === 'sumario'}
-              onClick={() => setPainel(painel === 'sumario' ? 'nenhum' : 'sumario')}
+              onClick={() => alternarPainel('sumario')}
             >
               <IconeSumario />
             </button>
           )}
+          <button type="button" className="botao-icone" aria-label="Buscar no livro" title="Buscar no livro" aria-expanded={painel === 'busca'} onClick={() => alternarPainel('busca')}>
+            <IconeBusca />
+          </button>
+          <button
+            type="button"
+            className="botao-icone"
+            aria-label={paginaMarcada ? 'Tirar o marcador desta página' : 'Marcar esta página'}
+            title={paginaMarcada ? 'Tirar o marcador desta página' : 'Marcar esta página'}
+            aria-pressed={paginaMarcada}
+            disabled={!aberto}
+            onClick={() => void alternarMarcador()}
+          >
+            <IconeMarcador cheio={paginaMarcada} />
+          </button>
+          <button
+            type="button"
+            className={`botao-icone${anotando ? ' ligado' : ''}`}
+            aria-label="Modo anotação: selecionar e destacar texto"
+            title="Modo anotação: selecionar e destacar texto"
+            aria-pressed={anotando}
+            disabled={!aberto}
+            onClick={() => setAnotando(!anotando)}
+          >
+            <IconeCaneta />
+          </button>
+          <button type="button" className="botao-icone" aria-label="Marcadores e anotações" title="Marcadores e anotações" aria-expanded={painel === 'anotacoes'} onClick={() => alternarPainel('anotacoes')}>
+            <IconeAnotacoes />
+          </button>
           <button
             type="button"
             className="botao-icone"
             aria-label="Aparência da leitura"
             title="Aparência da leitura"
             aria-expanded={painel === 'aparencia'}
-            onClick={() => setPainel(painel === 'aparencia' ? 'nenhum' : 'aparencia')}
+            onClick={() => alternarPainel('aparencia')}
           >
             <IconeAparencia />
           </button>
@@ -395,6 +636,19 @@ export function Leitor({ livroId }: { livroId: string }) {
           )}
         </div>
       </header>
+
+      {anotando && (
+        <div className="faixa-anotacao" role="status">
+          <span>
+            {semTexto
+              ? 'Modo anotação: este PDF é feito de imagens, então não há texto para selecionar.'
+              : 'Modo anotação: selecione um trecho para destacar. As páginas não viram com o toque.'}
+          </span>
+          <button type="button" className="botao botao-mini" onClick={() => setAnotando(false)}>
+            Sair
+          </button>
+        </div>
+      )}
 
       <div className="leitor-meio">
         {painel === 'sumario' && (
@@ -420,6 +674,7 @@ export function Leitor({ livroId }: { livroId: string }) {
         <div ref={area} className="leitor-area">
           {!aberto && <p className="leitor-abrindo">Abrindo o livro…</p>}
           {aberto && disposicao && (
+            <ContextoPagina.Provider value={dadosDaLeitura}>
             <Palco
               ref={palco}
               cache={aberto.cache}
@@ -432,10 +687,37 @@ export function Leitor({ livroId }: { livroId: string }) {
               altura={disposicao.altura}
               tresD={tresD}
               filtro={filtro ?? 'nenhum'}
+              anotando={anotando}
               aoMudarZoom={setZoom}
             />
+            </ContextoPagina.Provider>
           )}
         </div>
+
+        {painel === 'anotacoes' && (
+          <PainelAnotacoes
+            livroId={livroId}
+            visiveis={visiveis}
+            marcadores={marcadores}
+            notas={notas}
+            destaques={destaques}
+            destaqueEmFoco={destaqueEmFoco}
+            aoIr={mudarPagina}
+            aoAlternarMarcador={() => void alternarMarcador()}
+            aoFechar={() => setPainel('nenhum')}
+          />
+        )}
+
+        {painel === 'busca' && (
+          <PainelBusca
+            livroId={livroId}
+            temTexto={(livro ?? aberto?.livro)?.temTexto ?? null}
+            termo={termoBusca}
+            aoMudarTermo={setTermoBusca}
+            aoIr={mudarPagina}
+            aoFechar={() => setPainel('nenhum')}
+          />
+        )}
 
         {painel === 'aparencia' && (
           <section className="painel painel-aparencia" aria-label="Aparência da leitura">
@@ -527,6 +809,39 @@ export function Leitor({ livroId }: { livroId: string }) {
           </section>
         )}
       </div>
+
+      {selecao && anotando && (
+        <div
+          className="barra-selecao"
+          role="toolbar"
+          aria-label="Destacar o trecho selecionado"
+          style={{
+            left: Math.min(Math.max(8, selecao.x - 130), window.innerWidth - 268),
+            top: selecao.y + 60 > window.innerHeight ? Math.max(8, selecao.y - 110) : selecao.y + 10,
+          }}
+          // Clicar na barra não pode desfazer a seleção.
+          onPointerDown={(e) => e.preventDefault()}
+        >
+          {CORES_DESTAQUE.map((c) => (
+            <button key={c.valor} type="button" className={`cor-destaque destaque-${c.valor}`} aria-label={`Destacar em ${c.nome.toLowerCase()}`} title={c.nome} onClick={() => void destacar(c.valor, false)} />
+          ))}
+          <button type="button" className="botao botao-mini" onClick={() => void destacar('amarelo', true)}>
+            Com nota
+          </button>
+        </div>
+      )}
+
+      {sugerirLido && (
+        <div className="faixa-fim" role="status">
+          <span>Você chegou à última página. Marcar o livro como lido?</span>
+          <button type="button" className="botao botao-mini botao-principal" onClick={() => void db.livros.update(livroId, { status: 'lido' })}>
+            Marcar como lido
+          </button>
+          <button type="button" className="botao botao-mini" onClick={() => setFimDispensado(true)}>
+            Agora não
+          </button>
+        </div>
+      )}
 
       <footer className="leitor-base">
         <button type="button" className="botao-icone" onClick={() => palco.current?.voltar()} disabled={!aberto || pagina <= 1} aria-label="Página anterior">

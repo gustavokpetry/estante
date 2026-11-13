@@ -1,6 +1,6 @@
 import type { Livro } from '../lib/types'
-import { progressoDe } from './GradeLivros'
-import { useCapa } from './useCapa'
+import { progressoDe } from '../lib/filtros'
+import { useCapa, versaoDaCapa } from './useCapa'
 
 interface Props {
   livro: Livro
@@ -9,7 +9,7 @@ interface Props {
 
 /** Atalho no alto da estante para retomar o último livro aberto. */
 export function ContinuarLendo({ livro, aoAbrir }: Props) {
-  const capa = useCapa(livro.id)
+  const capa = useCapa(livro.id, versaoDaCapa(livro))
   const porcento = Math.round(progressoDe(livro) * 100)
 
   return (

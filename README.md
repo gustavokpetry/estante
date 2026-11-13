@@ -6,30 +6,31 @@ Biblioteca pessoal de PDFs: você adiciona os arquivos e lê cada um como se fos
 - Pode ser instalado no celular e no computador (PWA) e funciona sem internet.
 - Publicado no GitHub Pages: `https://gustavokpetry.github.io/estante/`
 
-Versão atual: **1.2** (veja o [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.7** (veja o [CHANGELOG](CHANGELOG.md)).
 
-## O que já funciona
+## O que o app faz
 
 **Estante**
-- Adicionar vários PDFs de uma vez (botão ou arrastar e soltar).
-- Estante em grade com a primeira página de cada PDF como capa e barra de progresso.
-- Atalho "Continuar lendo" para o último livro aberto.
-- Título e autor lidos do PDF, com edição manual.
-- Sem duplicatas: o mesmo arquivo nunca entra duas vezes.
+- Adicionar vários PDFs de uma vez (botão ou arrastar e soltar), sem duplicatas.
+- Três visuais: grade de capas, estante de madeira e lombadas (o livro gira e mostra a capa).
+- Capa de cada livro: primeira página do PDF, uma imagem sua ou uma capa criada no app (4 modelos, cor à escolha).
+- Coleções, tags, status de leitura (quero ler, lendo, lido) e avaliação de meia em meia estrela.
+- Busca por título ou autor, filtros e ordenação.
+- Atalho "Continuar lendo" e barra de progresso em cada livro.
 
 **Leitor**
 - Três modos: virada de página com dobra, livro simples (duas páginas) e página única.
-- A capa aparece sozinha; depois as páginas seguem em pares.
-- No celular em pé aparece uma página por vez; deitado, duas.
-- Livros horizontais (páginas deitadas) abrem de três jeitos, à escolha por livro: encadernação no topo, uma página por vez ou duas lado a lado.
-- Navegação por toque, arrasto do canto, deslize, setas do teclado, barra de posição, "ir para a página" e sumário do PDF.
-- Zoom (pinça, Ctrl + roda do mouse, teclas + e -) e tela cheia.
-- Cor das páginas: original, sépia ou noite.
+- Livros horizontais: encadernação no topo, uma página por vez ou duas lado a lado.
+- Navegação por toque, arrasto do canto, deslize, teclado, barra de posição, "ir para a página" e sumário do PDF.
+- Zoom (pinça, Ctrl + roda do mouse, teclas) e tela cheia. Cor das páginas: original, sépia ou noite.
+- Marcadores, notas por página e destaques de texto em 4 cores, com nota opcional.
+- Busca no texto do livro, ignorando acentos e maiúsculas.
 - Abre sempre na página onde você parou.
 
 **Geral**
+- Estatísticas: tempo de leitura, páginas lidas, sequência de dias, tempo por livro e avaliações.
+- Backup completo em .zip (ou só os dados, sem os PDFs) e importação que mescla sem duplicar.
 - Tema dia, noite ou igual ao do aparelho.
-- Medidor do espaço usado e pedido para o navegador manter os dados.
 
 ### Atalhos do leitor
 
@@ -73,9 +74,15 @@ Se o repositório mudar de nome, troque a constante `base` em `vite.config.ts` p
 
 ```
 src/
-  lib/         regras e dados: banco local, leitura de PDF, importação, tema,
-               paginação (folhas.ts), geometria da virada (dobra.ts), cache de páginas (paginas.ts)
-  components/  telas e peças da interface (Leitor.tsx e Palco.tsx são o leitor)
+  lib/         regras e dados, sem interface:
+                 db.ts            banco local (IndexedDB)       importar.ts   entrada de PDFs
+                 pdf.ts           abrir PDF e gerar capa        capas.ts      capas criadas e recortadas
+                 folhas.ts        paginação                     dobra.ts      geometria da virada
+                 paginas.ts       cache de páginas desenhadas   filtros.ts    busca, filtros e ordenação
+                 indexador.ts     texto dos PDFs para a busca   texto.ts      normalização e trechos
+                 estatisticas.ts  tempo e dias de leitura       backup.ts     exportar e importar
+  components/  telas e peças da interface
+                 App.tsx (em src/) é a estante; Leitor.tsx e Palco.tsx são o leitor
   styles/      identidade visual (madeira, papel, temas dia e noite)
 tests/         testes automatizados
 scripts/       copia os arquivos auxiliares do PDF.js antes do build
@@ -89,4 +96,16 @@ public/        ícones do app
 - **Virada de página própria** (`src/lib/dobra.ts`): sem biblioteca externa. A StPageFlip foi avaliada e descartada (sem manutenção desde 2022, redesenha todas as páginas a cada quadro e não mostra páginas em canvas durante a virada).
 - **Dexie**: camada simples sobre o IndexedDB.
 - **vite-plugin-pwa**: instalação e funcionamento offline.
+- **fflate**: leitura e escrita do .zip de backup.
 - **Alegreya e Alegreya Sans** (`@fontsource`): fontes hospedadas junto com o app.
+
+## Formato do backup
+
+Um `.zip` com:
+
+- `library.json`: livros, coleções, marcadores, notas, destaques, registro de leitura e configurações.
+- `capas/<id>.jpg`: a capa de cada livro.
+- `pdfs/<id>.pdf`: os arquivos (ausentes no backup "sem os PDFs").
+
+O `id` é o SHA-256 do PDF, o que permite reconhecer o mesmo livro em outro aparelho. O texto usado
+na busca não vai no backup; ele é refeito depois da importação.
