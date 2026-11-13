@@ -965,3 +965,704 @@ input {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   v1.1: cartões com detalhes, "continuar lendo" e o leitor
+   ========================================================================== */
+
+.livro-legenda {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.livro-textos {
+  flex: 1;
+  min-width: 0;
+}
+
+.livro-legenda .livro-titulo {
+  margin-top: 0;
+}
+
+.livro-detalhes {
+  flex: none;
+  margin: -6px -8px 0 0;
+  color: var(--tinta-suave);
+}
+
+.livro-detalhes:hover {
+  background: rgba(125, 70, 19, 0.14);
+}
+
+/* --- Continuar lendo ----------------------------------------------------- */
+
+.continuar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 30px;
+  padding: 14px 18px 14px 14px;
+  border: 1px solid var(--linha);
+  border-left: 5px solid var(--ambar);
+  border-radius: var(--raio);
+  background: var(--papel-claro);
+}
+
+.continuar-capa {
+  flex: none;
+  height: 84px;
+  border-radius: 2px 4px 4px 2px;
+  background: var(--papel-escuro);
+  box-shadow: 0 6px 10px -5px var(--sombra-livro);
+  overflow: hidden;
+}
+
+.continuar-capa img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.continuar-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.continuar-chamada {
+  color: var(--tinta-suave);
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.continuar h2 {
+  font-size: 1.375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.continuar-pagina {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 560px) {
+  .continuar {
+    flex-wrap: wrap;
+    gap: 12px 14px;
+  }
+
+  .continuar-capa {
+    height: 64px;
+  }
+
+  .continuar .botao {
+    width: 100%;
+  }
+}
+
+/* --- Leitor: mesa de leitura --------------------------------------------- */
+
+.leitor {
+  --mesa: #4a301c;
+  --mesa-escura: #2c1b0f;
+  --papel-pagina: #fbf7ee;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: #f4e9d0;
+  background-color: var(--mesa);
+  /* Tampo da mesa: veios da madeira e a luz do abajur no centro. */
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% 42%, rgba(237, 178, 79, 0.2), transparent 70%),
+    repeating-linear-gradient(90.6deg, rgba(0, 0, 0, 0.09) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(89.5deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 31px),
+    linear-gradient(180deg, var(--mesa) 0%, var(--mesa-escura) 100%);
+  overscroll-behavior: none;
+}
+
+:root[data-tema='escuro'] .leitor {
+  --mesa: #2a1a0f;
+  --mesa-escura: #140c06;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .leitor {
+    --mesa: #2a1a0f;
+    --mesa-escura: #140c06;
+  }
+}
+
+.leitor-aviso {
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+  font-family: var(--fonte-titulo);
+  font-size: 1.25rem;
+}
+
+.leitor-topo,
+.leitor-base {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(20, 12, 6, 0.55);
+}
+
+.leitor-topo {
+  padding: calc(4px + env(safe-area-inset-top, 0px)) max(6px, env(safe-area-inset-right, 0px)) 4px
+    max(6px, env(safe-area-inset-left, 0px));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.leitor-base {
+  gap: 8px;
+  padding: 4px max(8px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px))
+    max(8px, env(safe-area-inset-left, 0px));
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.leitor-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leitor-acoes {
+  display: flex;
+}
+
+.leitor .botao-icone:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.leitor .botao-icone:disabled:hover {
+  background: transparent;
+}
+
+.leitor-meio {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+.leitor-area {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding: 18px 22px;
+}
+
+@media (max-width: 700px) {
+  .leitor-area {
+    padding: 10px 8px;
+  }
+}
+
+.leitor-abrindo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 1.25rem;
+  color: #dcc9a2;
+}
+
+/* --- Palco e páginas ------------------------------------------------------ */
+
+.palco {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.palco-zoom {
+  overflow: auto;
+  touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
+}
+
+.palco-centro {
+  min-width: 100%;
+  min-height: 100%;
+  width: max-content;
+  display: flex;
+}
+
+.leitor-area .palco {
+  inset: 0;
+  padding: inherit;
+}
+
+.livro-aberto {
+  position: relative;
+  margin: auto;
+  flex: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.com-dobra {
+  cursor: pointer;
+}
+
+.com-zoom {
+  cursor: grab;
+}
+
+.com-zoom:active {
+  cursor: grabbing;
+}
+
+/* Em página única, o que passa para a esquerda da lombada some (não há página lá). */
+.livro-uma {
+  clip-path: inset(-60vh -60vw -60vh 0);
+}
+
+.folhas {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.folha {
+  position: relative;
+  flex: none;
+  background: var(--papel-pagina);
+  box-shadow:
+    0 22px 34px -18px rgba(0, 0, 0, 0.75),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.folha-esquerda {
+  border-radius: 3px 0 0 3px;
+}
+
+.folha-direita,
+.livro-uma .folha {
+  border-radius: 0 3px 3px 0;
+}
+
+.pagina-tela {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Sombra do miolo, onde as duas páginas se encontram. */
+.vinco {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 9%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.1) 38%,
+    rgba(0, 0, 0, 0.32) 50%,
+    rgba(0, 0, 0, 0.1) 62%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.filtro-sepia .pagina-tela {
+  filter: sepia(0.5) brightness(0.96) contrast(0.96);
+}
+
+.filtro-noite .pagina-tela {
+  filter: invert(0.9) hue-rotate(180deg) sepia(0.3) brightness(0.92);
+}
+
+.filtro-sepia .folha {
+  background: #efe2c4;
+}
+
+.filtro-noite .folha {
+  background: #1e1812;
+}
+
+/* Troca simples de página: um deslize curto na direção da leitura. */
+.entra-frente {
+  animation: entrar-frente 0.2s ease-out;
+}
+
+.entra-tras {
+  animation: entrar-tras 0.2s ease-out;
+}
+
+@keyframes entrar-frente {
+  from {
+    opacity: 0.35;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes entrar-tras {
+  from {
+    opacity: 0.35;
+    transform: translateX(-18px);
+  }
+}
+
+/* --- Virada com dobra ---------------------------------------------------- */
+
+.virada {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.virada-peca {
+  position: absolute;
+  top: 0;
+}
+
+.virada .folha {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.virada-sombra {
+  display: none;
+}
+
+.virada-verso-caixa {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+}
+
+.virada-verso {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform, clip-path;
+}
+
+.virada-brilho {
+  position: absolute;
+  inset: 0;
+}
+
+/* --- Bordas clicáveis (modos sem dobra) ---------------------------------- */
+
+.borda {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f4e9d0;
+  font-size: 3rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.borda-esquerda {
+  left: 0;
+  justify-content: flex-start;
+}
+
+.borda-direita {
+  right: 0;
+  justify-content: flex-end;
+}
+
+.borda span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 64px;
+  margin: 0 6px;
+  padding-bottom: 6px;
+  border-radius: 8px;
+  background: rgba(20, 12, 6, 0.6);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.borda:disabled {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .borda:not(:disabled):hover span {
+    opacity: 1;
+  }
+}
+
+.borda:focus-visible {
+  outline: none;
+}
+
+.borda:focus-visible span {
+  opacity: 1;
+  outline: 3px solid var(--ambar);
+}
+
+/* --- Barra de baixo ------------------------------------------------------ */
+
+.trilho {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--ambar);
+  background: transparent;
+  cursor: pointer;
+}
+
+.ir-para {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 6px;
+  font-size: 0.9375rem;
+  color: #dcc9a2;
+  white-space: nowrap;
+}
+
+.ir-para input {
+  width: 4.2em;
+  min-height: 36px;
+  padding: 2px 6px;
+  border: 1px solid rgba(244, 233, 208, 0.3);
+  border-radius: var(--raio);
+  background: rgba(0, 0, 0, 0.3);
+  color: #f4e9d0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Painéis laterais ---------------------------------------------------- */
+
+.painel {
+  flex: none;
+  width: min(330px, 86vw);
+  display: flex;
+  flex-direction: column;
+  color: var(--tinta);
+  background: var(--papel-claro);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+.painel-topo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid var(--linha);
+}
+
+.painel-topo h2 {
+  font-size: 1.25rem;
+}
+
+.painel .botao-icone:hover {
+  background: rgba(125, 70, 19, 0.14);
+}
+
+.painel-corpo {
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+@media (max-width: 900px) {
+  .painel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+
+  .painel-sumario {
+    left: 0;
+  }
+
+  .painel-aparencia {
+    right: 0;
+  }
+}
+
+.sumario-lista {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+}
+
+.sumario-lista button {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.sumario-lista button:hover {
+  background: rgba(125, 70, 19, 0.12);
+}
+
+.opcoes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.opcoes legend,
+.opcoes-titulo {
+  padding: 0;
+  margin-bottom: 4px;
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.opcao {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  cursor: pointer;
+}
+
+.opcao:has(input:checked) {
+  border-color: var(--caramelo);
+  background: var(--papel);
+}
+
+.opcao input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: var(--caramelo);
+}
+
+.opcao strong,
+.opcao small {
+  display: block;
+}
+
+.opcao strong {
+  font-weight: 500;
+}
+
+.opcao small {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.opcao-solta {
+  border-style: dashed;
+}
+
+.painel-nota {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.segmentos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+.segmento {
+  position: relative;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.segmento + .segmento {
+  border-left: 1px solid var(--linha);
+}
+
+.segmento input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmento.ativo {
+  background: var(--caramelo);
+  color: var(--sobre-caramelo);
+}
+
+.segmento:has(input:focus-visible) {
+  outline: 3px solid var(--ambar);
+  outline-offset: -3px;
+}
+
+.zoom-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-valor {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entra-frente,
+  .entra-tras {
+    animation: none;
+  }
+}

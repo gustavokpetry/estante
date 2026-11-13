@@ -1,5 +1,23 @@
 # Histórico de versões
 
+## 1.1 (12 de novembro de 2026)
+
+O leitor.
+
+- Clicar na capa abre o livro. Os detalhes ficam no botão "⋯" ao lado do título.
+- Três modos de leitura, trocáveis a qualquer momento: virada de página com dobra, livro simples e página única.
+  O modo vale para todos os livros ou só para o livro aberto, à sua escolha.
+- Virada com dobra feita sob medida: a folha acompanha o dedo ou o mouse a partir de qualquer canto, com sombra e brilho do papel.
+- A capa aparece sozinha e as páginas seguintes em pares. No celular em pé, uma página por vez.
+- Navegação: toque, arrasto, deslize, setas do teclado, barra de posição, campo "ir para a página" e sumário do PDF.
+- Zoom até 400% (pinça, Ctrl + roda do mouse, teclas) com a página redesenhada em alta resolução, e tela cheia.
+- Cor das páginas: original, sépia ou noite.
+- O livro abre na página onde você parou; a estante mostra o progresso e o atalho "Continuar lendo".
+- Livros grandes: só as páginas visíveis e as vizinhas ficam na memória.
+- Um livro aberto pela primeira vez passa de "Quero ler" para "Lendo" (a tela de status chega na 1.4).
+
+Limitação desta versão: livros horizontais abrem sempre em página única. Os modos próprios deles chegam na 1.2.
+
 ## 1.0 (12 de novembro de 2026)
 
 Primeira versão: a base do app e a estante.
@@ -16,6 +34,6 @@ Primeira versão: a base do app e a estante.
 - Detalhes do livro: editar título e autor, excluir com confirmação.
 - Tela "Sobre": espaço usado, situação do armazenamento e como instalar no celular.
 
-Ainda não tem: leitor (1.1), livros horizontais no leitor (1.2), capas personalizadas e
+Ficou para depois: leitor (1.1), livros horizontais no leitor (1.2), capas personalizadas e
 outros visuais da estante (1.3), coleções, tags, status e avaliação (1.4), marcadores e
 anotações (1.5), busca no texto e estatísticas (1.6), backup (1.7).

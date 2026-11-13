@@ -6,19 +6,38 @@ Biblioteca pessoal de PDFs: você adiciona os arquivos e lê cada um como se fos
 - Pode ser instalado no celular e no computador (PWA) e funciona sem internet.
 - Publicado no GitHub Pages: `https://gustavokpetry.github.io/estante/`
 
-Versão atual: **1.0** (veja o [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.1** (veja o [CHANGELOG](CHANGELOG.md)).
 
 ## O que já funciona
 
+**Estante**
 - Adicionar vários PDFs de uma vez (botão ou arrastar e soltar).
-- Estante em grade com a primeira página de cada PDF como capa.
+- Estante em grade com a primeira página de cada PDF como capa e barra de progresso.
+- Atalho "Continuar lendo" para o último livro aberto.
 - Título e autor lidos do PDF, com edição manual.
-- Detecção de livros horizontais (páginas deitadas).
 - Sem duplicatas: o mesmo arquivo nunca entra duas vezes.
+
+**Leitor**
+- Três modos: virada de página com dobra, livro simples (duas páginas) e página única.
+- A capa aparece sozinha; depois as páginas seguem em pares.
+- No celular em pé aparece uma página por vez; deitado, duas.
+- Navegação por toque, arrasto do canto, deslize, setas do teclado, barra de posição, "ir para a página" e sumário do PDF.
+- Zoom (pinça, Ctrl + roda do mouse, teclas + e -) e tela cheia.
+- Cor das páginas: original, sépia ou noite.
+- Abre sempre na página onde você parou.
+
+**Geral**
 - Tema dia, noite ou igual ao do aparelho.
 - Medidor do espaço usado e pedido para o navegador manter os dados.
 
-O leitor em formato de livro chega na versão 1.1.
+### Atalhos do leitor
+
+| Tecla | Ação |
+| --- | --- |
+| → / Page Down / Espaço | Próxima página |
+| ← / Page Up / Shift + Espaço | Página anterior |
+| Home / End | Primeira / última página |
+| + / - / 0 | Aumentar / diminuir / tirar o zoom |
 
 ## Rodar no computador
 
@@ -52,8 +71,9 @@ Se o repositório mudar de nome, troque a constante `base` em `vite.config.ts` p
 
 ```
 src/
-  lib/         regras e dados: banco local, leitura de PDF, importação, tema
-  components/  telas e peças da interface
+  lib/         regras e dados: banco local, leitura de PDF, importação, tema,
+               paginação (folhas.ts), geometria da virada (dobra.ts), cache de páginas (paginas.ts)
+  components/  telas e peças da interface (Leitor.tsx e Palco.tsx são o leitor)
   styles/      identidade visual (madeira, papel, temas dia e noite)
 tests/         testes automatizados
 scripts/       copia os arquivos auxiliares do PDF.js antes do build
@@ -64,6 +84,7 @@ public/        ícones do app
 
 - **React + Vite + TypeScript**: base do app.
 - **PDF.js** (`pdfjs-dist`): abre e desenha os PDFs.
+- **Virada de página própria** (`src/lib/dobra.ts`): sem biblioteca externa. A StPageFlip foi avaliada e descartada (sem manutenção desde 2022, redesenha todas as páginas a cada quadro e não mostra páginas em canvas durante a virada).
 - **Dexie**: camada simples sobre o IndexedDB.
 - **vite-plugin-pwa**: instalação e funcionamento offline.
 - **Alegreya e Alegreya Sans** (`@fontsource`): fontes hospedadas junto com o app.

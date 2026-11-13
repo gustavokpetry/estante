@@ -5,16 +5,20 @@ import { DialogoLivro } from './components/DialogoLivro'
 import { DialogoSobre } from './components/DialogoSobre'
 import { EstanteVazia } from './components/EstanteVazia'
 import { FilaImportacao, type ItemFila } from './components/FilaImportacao'
+import { ContinuarLendo } from './components/ContinuarLendo'
 import { GradeLivros } from './components/GradeLivros'
+import { Leitor } from './components/Leitor'
 import { SoltarArquivos } from './components/SoltarArquivos'
 import { pedirPersistencia } from './lib/armazenamento'
 import { db } from './lib/db'
 import { plural } from './lib/formato'
 import { ehPdf, importarPdf } from './lib/importar'
+import { abrirLivro, useRota } from './lib/rota'
 
 let proximoIdFila = 1
 
 export function App() {
+  const rota = useRota()
   const livros = useLiveQuery(() => db.livros.orderBy('adicionadoEm').reverse().toArray(), [])
   const [fila, setFila] = useState<ItemFila[]>([])
   const [livroAbertoId, setLivroAbertoId] = useState<string | null>(null)
@@ -67,6 +71,13 @@ export function App() {
   const carregando = livros === undefined
   const vazia = !carregando && livros.length === 0
 
+  if (rota.tela === 'leitor') return <Leitor key={rota.livroId} livroId={rota.livroId} />
+
+  // O livro lido por último que ainda não terminou.
+  const emLeitura = livros
+    ?.filter((l) => l.ultimaLeitura !== null && l.status !== 'lido')
+    .sort((a, b) => (b.ultimaLeitura ?? 0) - (a.ultimaLeitura ?? 0))[0]
+
   return (
     <div className="app">
       <Cabecalho aoAdicionar={escolherArquivos} aoAbrirSobre={() => setSobreAberto(true)} />
@@ -90,8 +101,9 @@ export function App() {
         {vazia && <EstanteVazia aoAdicionar={escolherArquivos} />}
         {!carregando && !vazia && (
           <>
+            {emLeitura && <ContinuarLendo livro={emLeitura} aoAbrir={abrirLivro} />}
             <p className="contagem">{plural(livros.length, 'livro', 'livros')} na estante</p>
-            <GradeLivros livros={livros} aoAbrir={setLivroAbertoId} />
+            <GradeLivros livros={livros} aoAbrir={abrirLivro} aoVerDetalhes={setLivroAbertoId} />
           </>
         )}
       </main>
@@ -105,7 +117,7 @@ export function App() {
       <SoltarArquivos aoSoltar={adicionarArquivos} />
       <FilaImportacao itens={fila} aoFechar={() => setFila([])} />
 
-      {livroAberto && <DialogoLivro livro={livroAberto} aoFechar={() => setLivroAbertoId(null)} />}
+      {livroAberto && <DialogoLivro livro={livroAberto} aoFechar={() => setLivroAbertoId(null)} aoLer={abrirLivro} />}
       {sobreAberto && <DialogoSobre aoFechar={() => setSobreAberto(false)} />}
     </div>
   )

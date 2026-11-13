@@ -8,9 +8,10 @@ import { useCapa } from './useCapa'
 interface Props {
   livro: Livro
   aoFechar: () => void
+  aoLer: (id: string) => void
 }
 
-export function DialogoLivro({ livro, aoFechar }: Props) {
+export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
   const capa = useCapa(livro.id)
   const [titulo, setTitulo] = useState(livro.titulo)
   const [autor, setAutor] = useState(livro.autor)
@@ -70,6 +71,14 @@ export function DialogoLivro({ livro, aoFechar }: Props) {
                 {plural(livro.totalPaginas, 'página', 'páginas')}, {formatarBytes(livro.tamanhoBytes)}
               </dd>
             </div>
+            {livro.ultimaLeitura !== null && (
+              <div>
+                <dt>Leitura</dt>
+                <dd>
+                  Página {livro.paginaAtual} de {livro.totalPaginas}
+                </dd>
+              </div>
+            )}
             <div>
               <dt>Formato</dt>
               <dd>{livro.orientacao === 'horizontal' ? 'Horizontal (páginas deitadas)' : 'Vertical'}</dd>
@@ -85,7 +94,10 @@ export function DialogoLivro({ livro, aoFechar }: Props) {
           </dl>
 
           <div className="detalhes-acoes">
-            <button type="button" className="botao botao-principal" onClick={salvar} disabled={!podeSalvar}>
+            <button type="button" className="botao botao-principal" onClick={() => aoLer(livro.id)}>
+              {livro.ultimaLeitura ? 'Continuar lendo' : 'Ler'}
+            </button>
+            <button type="button" className="botao" onClick={salvar} disabled={!podeSalvar}>
               Salvar alterações
             </button>
             {salvo && !mudou && (
@@ -94,8 +106,6 @@ export function DialogoLivro({ livro, aoFechar }: Props) {
               </span>
             )}
           </div>
-
-          <p className="nota">A leitura em formato de livro chega na versão 1.1.</p>
 
           <div className="zona-exclusao">
             {confirmandoExclusao ? (
