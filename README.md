@@ -6,17 +6,18 @@ Biblioteca pessoal de PDFs: você adiciona os arquivos e lê cada um como se fos
 - Pode ser instalado no celular e no computador (PWA) e funciona sem internet.
 - Publicado no GitHub Pages: `https://gustavokpetry.github.io/estante/`
 
-Versão atual: **1.7** (veja o [CHANGELOG](CHANGELOG.md)).
+Versão atual: **1.8** (veja o [CHANGELOG](CHANGELOG.md)).
 
 ## O que o app faz
 
 **Estante**
 - Adicionar vários PDFs de uma vez (botão ou arrastar e soltar), sem duplicatas.
-- Três visuais: grade de capas, estante de madeira e lombadas (o livro gira e mostra a capa).
+- Três visuais: estante de madeira (padrão), lombadas (o livro gira e mostra a capa) e grade de capas.
+- Arrume os livros arrastando, em qualquer visual. No celular, segure o livro um instante antes de arrastar. No teclado, Alt + setas.
 - Capa de cada livro: primeira página do PDF, uma imagem sua ou uma capa criada no app (4 modelos, cor à escolha).
 - Coleções, tags, status de leitura (quero ler, lendo, lido) e avaliação de meia em meia estrela.
 - Busca por título ou autor, filtros e ordenação.
-- Atalho "Continuar lendo" e barra de progresso em cada livro.
+- Barra de progresso em cada livro.
 
 **Leitor**
 - Três modos: virada de página com dobra, livro simples (duas páginas) e página única.

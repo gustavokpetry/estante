@@ -3,17 +3,16 @@ import { lerArmazenamento, type EstadoArmazenamento } from '../lib/armazenamento
 import { baixar, exportarBackup, importarBackup, nomeDoBackup, type ResumoImportacao } from '../lib/backup'
 import { formatarBytes, plural } from '../lib/formato'
 import { Dialogo } from './Dialogo'
+import { IconeExportar, IconeImportar } from './Icones'
 
 function descreverImportacao(r: ResumoImportacao): string {
   const partes = [
-    r.livrosNovos ? `${plural(r.livrosNovos, 'livro novo', 'livros novos')}` : '',
-    r.livrosAtualizados ? `${plural(r.livrosAtualizados, 'livro atualizado', 'livros atualizados')}` : '',
-    r.anotacoes ? `${plural(r.anotacoes, 'anotação', 'anotações')}` : '',
+    r.livrosNovos ? plural(r.livrosNovos, 'livro novo', 'livros novos') : '',
+    r.livrosAtualizados ? plural(r.livrosAtualizados, 'atualizado', 'atualizados') : '',
+    r.anotacoes ? plural(r.anotacoes, 'anotação', 'anotações') : '',
+    r.livrosSemPdf ? `${r.livrosSemPdf} sem PDF (de fora)` : '',
   ].filter(Boolean)
-  const base = partes.length ? `Backup importado: ${partes.join(', ')}.` : 'Backup importado. Não havia nada novo.'
-  return r.livrosSemPdf
-    ? `${base} ${plural(r.livrosSemPdf, 'livro ficou de fora', 'livros ficaram de fora')} porque o backup não trazia o PDF.`
-    : base
+  return partes.length ? `Importado: ${partes.join(', ')}.` : 'Importado. Nada novo.'
 }
 
 export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
@@ -30,13 +29,13 @@ export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
 
   async function exportar(comPdfs: boolean) {
     setMensagem(null)
-    setOcupado('Preparando o backup…')
+    setOcupado('Preparando…')
     try {
-      const blob = await exportarBackup(comPdfs, (feitos, total) => setOcupado(`Preparando o backup: ${feitos} de ${total} livros`))
+      const blob = await exportarBackup(comPdfs, (feitos, total) => setOcupado(`Preparando ${feitos}/${total}`))
       baixar(blob, nomeDoBackup(comPdfs))
-      setMensagem({ texto: `Backup pronto (${formatarBytes(blob.size)}). Guarde o arquivo num lugar seguro.`, erro: false })
+      setMensagem({ texto: `Backup pronto (${formatarBytes(blob.size)}).`, erro: false })
     } catch {
-      setMensagem({ texto: 'Não foi possível gerar o backup. Se a biblioteca for muito grande, tente pelo computador.', erro: true })
+      setMensagem({ texto: 'Não deu para gerar o backup. Tente pelo computador.', erro: true })
     } finally {
       setOcupado(null)
     }
@@ -45,19 +44,19 @@ export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
   async function importar(arquivo: File | undefined) {
     if (!arquivo) return
     setMensagem(null)
-    setOcupado('Lendo o backup…')
+    setOcupado('Lendo…')
     try {
-      const resumo = await importarBackup(arquivo, (titulo) => setOcupado(`Guardando: ${titulo}`))
+      const resumo = await importarBackup(arquivo, (titulo) => setOcupado(titulo))
       setMensagem({ texto: descreverImportacao(resumo), erro: false })
       medir()
     } catch (e) {
       const motivo = e instanceof Error ? e.message : ''
       const texto =
         motivo === 'versao'
-          ? 'Este backup foi feito por uma versão mais nova do app. Atualize o app e tente de novo.'
+          ? 'Backup de uma versão mais nova. Atualize o app.'
           : motivo === 'formato'
             ? 'Este arquivo não é um backup da Estante.'
-            : 'Não foi possível importar o backup. O arquivo pode estar incompleto ou o armazenamento, cheio.'
+            : 'Não deu para importar: arquivo incompleto ou sem espaço.'
       setMensagem({ texto, erro: true })
     } finally {
       setOcupado(null)
@@ -65,24 +64,22 @@ export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
   }
 
   return (
-    <Dialogo titulo="Sobre a Estante" aoFechar={aoFechar}>
+    <Dialogo titulo={`Estante ${__APP_VERSION__}`} aoFechar={aoFechar}>
       <div className="sobre">
-        <p>Sua biblioteca pessoal de PDFs, lidos como livros. Versão {__APP_VERSION__}.</p>
-
         <h3>Backup</h3>
-        <p>
-          Os livros e todos os seus dados ficam guardados só neste navegador, neste aparelho. Limpar os dados do site apaga
-          tudo. Faça um backup de vez em quando, e use-o também para levar a biblioteca para outro aparelho.
-        </p>
+        <p>Tudo fica só neste navegador. Guarde uma cópia.</p>
         <div className="backup-acoes">
           <button type="button" className="botao botao-principal" onClick={() => void exportar(true)} disabled={ocupado !== null}>
-            Exportar tudo (.zip)
+            <IconeExportar />
+            Tudo
           </button>
-          <button type="button" className="botao" onClick={() => void exportar(false)} disabled={ocupado !== null}>
-            Exportar sem os PDFs
+          <button type="button" className="botao" onClick={() => void exportar(false)} disabled={ocupado !== null} title="Capas, progresso e anotações, sem os PDFs">
+            <IconeExportar />
+            Sem PDFs
           </button>
           <button type="button" className="botao" onClick={() => seletor.current?.click()} disabled={ocupado !== null}>
-            Importar backup
+            <IconeImportar />
+            Importar
           </button>
           <input
             ref={seletor}
@@ -97,10 +94,6 @@ export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
             }}
           />
         </div>
-        <p className="medidor-legenda">
-          “Sem os PDFs” leva só capas, progresso, anotações, coleções e estatísticas: serve para atualizar um aparelho que
-          já tem os mesmos livros. Importar nunca apaga nem duplica nada.
-        </p>
         {ocupado && (
           <p className="selo" role="status">
             {ocupado}
@@ -112,32 +105,22 @@ export function DialogoSobre({ aoFechar }: { aoFechar: () => void }) {
           </p>
         )}
 
-        <h3>Armazenamento</h3>
-        {estado === null && <p>Medindo o espaço…</p>}
+        <h3>Espaço</h3>
         {estado !== null && temMedida && (
           <>
             <div className="medidor" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(fracao * 100)} aria-label="Espaço usado">
               <span style={{ width: `${Math.max(fracao * 100, 1)}%` }} />
             </div>
             <p className="medidor-legenda">
-              {formatarBytes(estado.usado!)} usados de {formatarBytes(estado.disponivel!)} disponíveis neste navegador.
+              {formatarBytes(estado.usado!)} de {formatarBytes(estado.disponivel!)}
             </p>
           </>
         )}
-        {estado !== null && !temMedida && <p>Este navegador não informa o espaço usado.</p>}
-        {estado !== null && estado.persistente === true && <p className="selo selo-bom">O navegador vai manter a biblioteca guardada.</p>}
-        {estado !== null && estado.persistente === false && (
-          <p className="selo selo-alerta">
-            O navegador ainda pode apagar a biblioteca se faltar espaço. Instalar o app na tela inicial costuma resolver.
-          </p>
-        )}
+        {estado !== null && !temMedida && <p className="medidor-legenda">O navegador não informa.</p>}
+        {estado !== null && estado.persistente === false && <p className="selo selo-alerta">O navegador pode apagar os dados. Instale o app para evitar.</p>}
 
-        <h3>Instalar no celular</h3>
-        <p>
-          No iPhone (Safari): toque em Compartilhar e depois em “Adicionar à Tela de Início”. No Android (Chrome): abra o
-          menu e toque em “Instalar app”. Instalado, o app abre em tela cheia, funciona sem internet e o iPhone deixa de
-          apagar os dados por falta de uso.
-        </p>
+        <h3>Instalar</h3>
+        <p>iPhone: Compartilhar, depois “Adicionar à Tela de Início”. Android: menu, depois “Instalar app”.</p>
       </div>
     </Dialogo>
   )

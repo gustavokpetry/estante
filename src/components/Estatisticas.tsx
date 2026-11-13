@@ -37,7 +37,7 @@ export function Estatisticas() {
     const maiorDia = Math.max(60, ...dias.map((d) => d.segundos))
     const titulos = new Map(livros.map((l) => [l.id, l.titulo]))
     const tempoPorLivro = [...porLivro.entries()]
-      .map(([id, s]) => ({ id, titulo: titulos.get(id) ?? 'Livro que não está mais na estante', segundos: s }))
+      .map(([id, s]) => ({ id, titulo: titulos.get(id) ?? 'Livro excluído', segundos: s }))
       .filter((l) => l.segundos >= 1)
       .sort((a, b) => b.segundos - a.segundos)
     const notas = [5, 4, 3, 2, 1].map((n) => ({ nota: n, quantos: livros.filter((l) => l.avaliacao !== null && Math.ceil(l.avaliacao) === n).length }))
@@ -67,41 +67,41 @@ export function Estatisticas() {
           <button type="button" className="botao-icone" onClick={voltarParaEstante} aria-label="Voltar para a estante" title="Voltar para a estante">
             <IconeVoltar />
           </button>
-          <h1 className="tabua-titulo">Estatísticas de leitura</h1>
+          <h1 className="tabua-titulo">Estatísticas</h1>
         </div>
       </header>
 
       <main className="parede estatisticas">
-        {!dados && <p className="aviso-carregando">Somando as leituras…</p>}
+        {!dados && <p className="aviso-carregando">Somando…</p>}
         {dados && dados.segundos < 1 && dados.concluidos === 0 && (
-          <p className="estatisticas-vazio">Ainda não há leituras registradas. Abra um livro e o tempo de leitura começa a contar.</p>
+          <p className="estatisticas-vazio">Sem leituras ainda.</p>
         )}
         {dados && (
           <>
             <dl className="numeros">
               <div>
-                <dt>Tempo total de leitura</dt>
+                <dt>Tempo</dt>
                 <dd>{formatarDuracao(dados.segundos)}</dd>
               </div>
               <div>
-                <dt>Páginas lidas</dt>
+                <dt>Páginas</dt>
                 <dd>{dados.paginas.toLocaleString('pt-BR')}</dd>
               </div>
               <div>
-                <dt>Dias seguidos lendo</dt>
+                <dt>Sequência</dt>
                 <dd>{plural(dados.sequencia, 'dia', 'dias')}</dd>
               </div>
               <div>
-                <dt>Livros concluídos</dt>
+                <dt>Lidos</dt>
                 <dd>
                   {dados.concluidos}
-                  {dados.lendo > 0 && <small> e {dados.lendo} em leitura</small>}
+                  {dados.lendo > 0 && <small> + {dados.lendo} lendo</small>}
                 </dd>
               </div>
             </dl>
 
             <section className="quadro">
-              <h2>Últimos 30 dias</h2>
+              <h2>30 dias</h2>
               <div className="barras-dias" role="img" aria-label={`Tempo de leitura por dia nos últimos 30 dias. Total: ${formatarDuracao(dados.dias.reduce((s, d) => s + d.segundos, 0))}.`}>
                 {dados.dias.map((d, i) => (
                   <div key={d.chave} className="barra-dia" title={`${diaCurto(d.chave)}: ${formatarDuracao(d.segundos)}, ${plural(d.paginas, 'página', 'páginas')}`}>
@@ -133,7 +133,7 @@ export function Estatisticas() {
 
             {dados.tempoPorLivro.length > 0 && (
               <section className="quadro">
-                <h2>Tempo por livro</h2>
+                <h2>Por livro</h2>
                 <ul className="barras-livros">
                   {dados.tempoPorLivro.slice(0, 15).map((l) => (
                     <li key={l.id}>
@@ -150,7 +150,7 @@ export function Estatisticas() {
 
             {dados.avaliados > 0 && (
               <section className="quadro">
-                <h2>Suas avaliações</h2>
+                <h2>Avaliações</h2>
                 <ul className="barras-livros barras-notas">
                   {dados.notas.map((n) => (
                     <li key={n.nota}>
@@ -160,11 +160,10 @@ export function Estatisticas() {
                       <span className="barras-livros-trilho">
                         <span style={{ width: `${n.quantos ? Math.max(2, (n.quantos / dados.maiorNota) * 100) : 0}%` }} />
                       </span>
-                      <span className="barras-livros-valor">{plural(n.quantos, 'livro', 'livros')}</span>
+                      <span className="barras-livros-valor">{n.quantos}</span>
                     </li>
                   ))}
                 </ul>
-                <p className="medidor-legenda">Meias estrelas contam na faixa de cima: 3,5 entra em 4 estrelas.</p>
               </section>
             )}
           </>

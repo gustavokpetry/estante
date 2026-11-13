@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { db, novoId } from '../lib/db'
 import type { CorDestaque, Destaque, Marcador, Nota } from '../lib/types'
-import { IconeFechar, IconeLixeira } from './Icones'
+import { IconeCerto, IconeFechar, IconeLixeira } from './Icones'
 
 export const CORES_DESTAQUE: Array<{ valor: CorDestaque; nome: string }> = [
   { valor: 'amarelo', nome: 'Amarelo' },
@@ -19,7 +19,6 @@ interface Props {
   destaques: Destaque[]
   destaqueEmFoco: string | null
   aoIr: (pagina: number) => void
-  aoAlternarMarcador: () => void
   aoFechar: () => void
 }
 
@@ -39,11 +38,10 @@ function CampoDeTexto({ valor, aoSalvar, rotulo, placeholder }: { valor: string;
   )
 }
 
-export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaques, destaqueEmFoco, aoIr, aoAlternarMarcador, aoFechar }: Props) {
+export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaques, destaqueEmFoco, aoIr, aoFechar }: Props) {
   const [novaNota, setNovaNota] = useState('')
   const lista = useRef<HTMLDivElement>(null)
   const paginaAtual = visiveis[0] ?? 1
-  const marcada = marcadores.some((m) => visiveis.includes(m.pagina))
 
   // Ao tocar num destaque na página, o painel rola até ele.
   useEffect(() => {
@@ -70,15 +68,12 @@ export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaque
       <div className="painel-corpo" ref={lista}>
         <section className="anotacoes-grupo">
           <h3>Marcadores ({marcadores.length})</h3>
-          <button type="button" className="botao" onClick={aoAlternarMarcador}>
-            {marcada ? 'Tirar o marcador desta página' : `Marcar a página ${paginaAtual}`}
-          </button>
           <ul className="anotacoes-lista">
             {marcadores.map((m) => (
               <li key={m.id} className="anotacao">
                 <div className="anotacao-topo">
                   <button type="button" className="anotacao-pagina" onClick={() => aoIr(m.pagina)}>
-                    Página {m.pagina}
+                    p. {m.pagina}
                   </button>
                   <button type="button" className="botao-icone botao-icone-pequeno" aria-label={`Excluir o marcador ${m.nome}`} onClick={() => void db.marcadores.delete(m.id)}>
                     <IconeLixeira />
@@ -101,19 +96,25 @@ export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaque
 
         <section className="anotacoes-grupo">
           <h3>Notas ({notas.length})</h3>
-          <label className="campo">
-            <span>Nova nota na página {paginaAtual}</span>
-            <textarea className="anotacao-texto" rows={3} value={novaNota} onChange={(e) => setNovaNota(e.target.value)} />
-          </label>
-          <button type="button" className="botao botao-principal" onClick={() => void salvarNota()} disabled={!novaNota.trim()}>
-            Salvar nota
-          </button>
+          <div className="nota-nova">
+            <textarea
+              className="anotacao-texto"
+              rows={2}
+              placeholder={`Nota da página ${paginaAtual}`}
+              aria-label={`Nova nota na página ${paginaAtual}`}
+              value={novaNota}
+              onChange={(e) => setNovaNota(e.target.value)}
+            />
+            <button type="button" className="botao-quadrado botao-quadrado-principal" onClick={() => void salvarNota()} disabled={!novaNota.trim()} aria-label="Salvar a nota" title="Salvar a nota">
+              <IconeCerto />
+            </button>
+          </div>
           <ul className="anotacoes-lista">
             {notas.map((n) => (
               <li key={n.id} className="anotacao">
                 <div className="anotacao-topo">
                   <button type="button" className="anotacao-pagina" onClick={() => aoIr(n.pagina)}>
-                    Página {n.pagina}
+                    p. {n.pagina}
                   </button>
                   <button type="button" className="botao-icone botao-icone-pequeno" aria-label={`Excluir a nota da página ${n.pagina}`} onClick={() => void db.notas.delete(n.id)}>
                     <IconeLixeira />
@@ -132,14 +133,14 @@ export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaque
         <section className="anotacoes-grupo">
           <h3>Destaques ({destaques.length})</h3>
           {destaques.length === 0 && (
-            <p className="painel-nota">Ligue o modo anotação (ícone de caneta), selecione um trecho do texto e escolha uma cor.</p>
+            <p className="painel-nota">Use a caneta para destacar.</p>
           )}
           <ul className="anotacoes-lista">
             {destaques.map((d) => (
               <li key={d.id} data-destaque={d.id} className={`anotacao anotacao-destaque destaque-borda-${d.cor}${d.id === destaqueEmFoco ? ' em-foco' : ''}`}>
                 <div className="anotacao-topo">
                   <button type="button" className="anotacao-pagina" onClick={() => aoIr(d.pagina)}>
-                    Página {d.pagina}
+                    p. {d.pagina}
                   </button>
                   <button type="button" className="botao-icone botao-icone-pequeno" aria-label="Excluir este destaque" onClick={() => void db.destaques.delete(d.id)}>
                     <IconeLixeira />
@@ -160,7 +161,7 @@ export function PainelAnotacoes({ livroId, visiveis, marcadores, notas, destaque
                     />
                   ))}
                 </div>
-                <CampoDeTexto valor={d.nota} rotulo="Nota do destaque" placeholder="Nota (opcional)" aoSalvar={(nota) => void db.destaques.update(d.id, { nota })} />
+                <CampoDeTexto valor={d.nota} rotulo="Nota do destaque" placeholder="Nota" aoSalvar={(nota) => void db.destaques.update(d.id, { nota })} />
               </li>
             ))}
           </ul>

@@ -40,12 +40,12 @@ export async function abrirPdf(dados: ArrayBuffer): Promise<PdfAberto> {
     void tarefa.destroy()
     const nome = (e as { name?: string })?.name
     if (nome === 'PasswordException') {
-      throw new FalhaAoAbrirPdf('senha', 'Este PDF é protegido por senha. Remova a senha e tente de novo.')
+      throw new FalhaAoAbrirPdf('senha', 'Protegido por senha')
     }
     if (nome === 'InvalidPDFException' || nome === 'FormatError') {
-      throw new FalhaAoAbrirPdf('invalido', 'O arquivo está corrompido ou não é um PDF válido.')
+      throw new FalhaAoAbrirPdf('invalido', 'Arquivo inválido')
     }
-    throw new FalhaAoAbrirPdf('desconhecido', 'Não foi possível abrir este PDF.')
+    throw new FalhaAoAbrirPdf('desconhecido', 'Não abriu')
   }
 }
 

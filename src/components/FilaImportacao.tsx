@@ -7,14 +7,6 @@ export interface ItemFila {
   mensagem?: string
 }
 
-const TEXTO: Record<ItemFila['estado'], string> = {
-  esperando: 'Na fila',
-  lendo: 'Guardando na estante…',
-  adicionado: 'Adicionado',
-  duplicado: 'Já está na estante.',
-  erro: 'Não foi possível adicionar.',
-}
-
 interface Props {
   itens: ItemFila[]
   aoFechar: () => void
@@ -24,12 +16,11 @@ export function FilaImportacao({ itens, aoFechar }: Props) {
   if (itens.length === 0) return null
   const pendentes = itens.filter((i) => i.estado === 'esperando' || i.estado === 'lendo').length
   const prontos = itens.length - pendentes
-  const titulo = pendentes > 0 ? `Adicionando ${prontos + 1} de ${itens.length}` : 'Pronto'
 
   return (
     <section className="fila" aria-label="Arquivos sendo adicionados">
       <header className="fila-topo">
-        <h2 aria-live="polite">{titulo}</h2>
+        <h2 aria-live="polite">{pendentes > 0 ? `${prontos + 1} de ${itens.length}` : 'Pronto'}</h2>
         {pendentes === 0 && (
           <button type="button" className="botao-icone botao-icone-pequeno" onClick={aoFechar} aria-label="Fechar lista">
             <IconeFechar />
@@ -40,13 +31,13 @@ export function FilaImportacao({ itens, aoFechar }: Props) {
         {itens.map((item) => (
           <li key={item.id} className={`fila-item fila-${item.estado}`}>
             <span className="fila-marca">
-              {item.estado === 'adicionado' && <IconeCerto />}
+              {item.estado === 'adicionado' && <IconeCerto aria-label="Adicionado" aria-hidden={false} role="img" />}
               {(item.estado === 'erro' || item.estado === 'duplicado') && <IconeAlerta />}
-              {item.estado === 'lendo' && <span className="girando" />}
+              {item.estado === 'lendo' && <span className="girando" role="img" aria-label="Adicionando" />}
             </span>
             <span className="fila-texto">
               <span className="fila-nome">{item.nome}</span>
-              <span className="fila-estado">{item.mensagem ?? TEXTO[item.estado]}</span>
+              {item.mensagem && <span className="fila-estado">{item.mensagem}</span>}
             </span>
           </li>
         ))}

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { salvarConfiguracao } from '../lib/db'
-import { temFiltroAtivo, type Filtros } from '../lib/filtros'
+import { SEM_FILTROS, temFiltroAtivo, type Filtros } from '../lib/filtros'
 import type { Colecao, Ordenacao, StatusLeitura, VisualEstante } from '../lib/types'
-import { IconeBusca, IconeFiltro, IconeGrade, IconeLombadas, IconePrateleira } from './Icones'
+import { IconeBusca, IconeFechar, IconeFiltro, IconeGrade, IconeLombadas, IconePasta, IconePrateleira } from './Icones'
 
 interface Props {
   filtros: Filtros
@@ -29,18 +29,25 @@ export function BarraEstante({ filtros, aoFiltrar, ordem, visual, colecoes, tags
       <div className="barra-linha">
         <label className="busca">
           <IconeBusca />
-          <span className="so-leitor-de-tela">Buscar por título ou autor</span>
           <input
             type="search"
-            placeholder="Buscar por título ou autor"
+            placeholder="Buscar"
+            aria-label="Buscar por título ou autor"
             value={filtros.busca}
             onChange={(e) => aoFiltrar({ ...filtros, busca: e.target.value })}
           />
         </label>
 
-        <button type="button" className={`botao botao-filtros${ativos ? ' com-filtros' : ''}`} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
+        <button
+          type="button"
+          className={`botao-quadrado${ativos ? ' com-filtros' : ''}`}
+          aria-expanded={aberto}
+          aria-label={ativos ? `Filtros e ordem (${ativos} em uso)` : 'Filtros e ordem'}
+          title="Filtros e ordem"
+          onClick={() => setAberto(!aberto)}
+        >
           <IconeFiltro />
-          <span>Filtros{ativos ? ` (${ativos})` : ''}</span>
+          {ativos > 0 && <span className="contador">{ativos}</span>}
         </button>
 
         <div className="visuais" role="radiogroup" aria-label="Visual da estante">
@@ -63,6 +70,17 @@ export function BarraEstante({ filtros, aoFiltrar, ordem, visual, colecoes, tags
 
       {aberto && (
         <div className="barra-filtros">
+          <label className="campo campo-compacto">
+            <span>Ordem</span>
+            <select value={ordem} onChange={(e) => void salvarConfiguracao('ordemEstante', e.target.value)}>
+              <option value="manual">Minha ordem</option>
+              <option value="recentes">Adicionados</option>
+              <option value="lidos">Lidos por último</option>
+              <option value="titulo">Título</option>
+              <option value="progresso">Progresso</option>
+              <option value="avaliacao">Avaliação</option>
+            </select>
+          </label>
           <label className="campo campo-compacto">
             <span>Coleção</span>
             <select value={filtros.colecaoId ?? ''} onChange={(e) => aoFiltrar({ ...filtros, colecaoId: e.target.value || null })}>
@@ -101,31 +119,21 @@ export function BarraEstante({ filtros, aoFiltrar, ordem, visual, colecoes, tags
               onChange={(e) => aoFiltrar({ ...filtros, avaliacaoMinima: e.target.value === '' ? null : Number(e.target.value) })}
             >
               <option value="">Qualquer</option>
-              <option value="5">5 estrelas</option>
+              <option value="5">5</option>
               <option value="4">4 ou mais</option>
               <option value="3">3 ou mais</option>
               <option value="2">2 ou mais</option>
               <option value="1">1 ou mais</option>
-              <option value="0">Sem avaliação</option>
-            </select>
-          </label>
-          <label className="campo campo-compacto">
-            <span>Ordenar por</span>
-            <select value={ordem} onChange={(e) => void salvarConfiguracao('ordemEstante', e.target.value)}>
-              <option value="recentes">Adicionados por último</option>
-              <option value="lidos">Lidos por último</option>
-              <option value="titulo">Título</option>
-              <option value="progresso">Progresso</option>
-              <option value="avaliacao">Avaliação</option>
+              <option value="0">Sem nota</option>
             </select>
           </label>
           <div className="barra-filtros-acoes">
-            <button type="button" className="botao" onClick={aoGerenciarColecoes}>
-              Gerenciar coleções
+            <button type="button" className="botao-quadrado" onClick={aoGerenciarColecoes} aria-label="Gerenciar coleções" title="Gerenciar coleções">
+              <IconePasta />
             </button>
             {temFiltroAtivo(filtros) && (
-              <button type="button" className="botao" onClick={() => aoFiltrar({ busca: '', colecaoId: null, tag: null, status: null, avaliacaoMinima: null })}>
-                Limpar filtros
+              <button type="button" className="botao-quadrado" onClick={() => aoFiltrar(SEM_FILTROS)} aria-label="Limpar filtros" title="Limpar filtros">
+                <IconeFechar />
               </button>
             )}
           </div>

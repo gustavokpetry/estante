@@ -168,3 +168,24 @@ export const IconeLixeira = (p: P) => (
     <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13" />
   </Base>
 )
+export const IconeLer = (p: P) => (
+  <Base {...p}>
+    <path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z" />
+    <path d="M12 6.5V19.5" />
+  </Base>
+)
+export const IconeExportar = (p: P) => (
+  <Base {...p}>
+    <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14" />
+  </Base>
+)
+export const IconeImportar = (p: P) => (
+  <Base {...p}>
+    <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14" />
+  </Base>
+)
+export const IconePasta = (p: P) => (
+  <Base {...p}>
+    <path d="M3.5 7.5v10.5h17V8.5h-8l-2-2.5h-7z" />
+  </Base>
+)

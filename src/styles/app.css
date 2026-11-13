@@ -996,75 +996,6 @@ input {
   background: rgba(125, 70, 19, 0.14);
 }
 
-/* --- Continuar lendo ----------------------------------------------------- */
-
-.continuar {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 30px;
-  padding: 14px 18px 14px 14px;
-  border: 1px solid var(--linha);
-  border-left: 5px solid var(--ambar);
-  border-radius: var(--raio);
-  background: var(--papel-claro);
-}
-
-.continuar-capa {
-  flex: none;
-  height: 84px;
-  border-radius: 2px 4px 4px 2px;
-  background: var(--papel-escuro);
-  box-shadow: 0 6px 10px -5px var(--sombra-livro);
-  overflow: hidden;
-}
-
-.continuar-capa img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.continuar-texto {
-  flex: 1;
-  min-width: 0;
-}
-
-.continuar-chamada {
-  color: var(--tinta-suave);
-  font-family: var(--fonte-titulo);
-  font-style: italic;
-  font-weight: 400;
-}
-
-.continuar h2 {
-  font-size: 1.375rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.continuar-pagina {
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-}
-
-@media (max-width: 560px) {
-  .continuar {
-    flex-wrap: wrap;
-    gap: 12px 14px;
-  }
-
-  .continuar-capa {
-    height: 64px;
-  }
-
-  .continuar .botao {
-    width: 100%;
-  }
-}
-
 /* --- Leitor: mesa de leitura --------------------------------------------- */
 
 .leitor {
@@ -3068,4 +2999,261 @@ input {
   border-radius: 2px;
   background: var(--ambar);
   color: #2a1a0f;
+}
+
+/* ==========================================================================
+   v1.8: interface enxuta (ícones no lugar de texto) e estante arrumável
+   ========================================================================== */
+
+/* --- Botões só com ícone -------------------------------------------------- */
+
+.botao-icone-destaque {
+  background: var(--ambar);
+  color: #2a1a0f;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.tabua .botao-icone-destaque:hover {
+  background: #e6ab46;
+}
+
+.botao-quadrado {
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: transparent;
+  color: var(--tinta);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.botao-quadrado:hover:not(:disabled) {
+  background: rgba(125, 70, 19, 0.12);
+}
+
+.botao-quadrado:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.botao-quadrado-principal {
+  border-color: transparent;
+  background: var(--caramelo);
+  color: var(--sobre-caramelo);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.botao-quadrado-principal:hover:not(:disabled) {
+  background: var(--caramelo-forte);
+}
+
+.botao-quadrado-perigo {
+  color: var(--perigo);
+}
+
+.botao-quadrado-mini {
+  width: 36px;
+  height: 36px;
+}
+
+.botao-quadrado.com-filtros {
+  border-color: var(--caramelo);
+  background: var(--papel-claro);
+}
+
+.contador {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--caramelo);
+  color: var(--sobre-caramelo);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.botao-redondo {
+  display: inline-grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--caramelo);
+  color: var(--sobre-caramelo);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 3px 0 rgba(0, 0, 0, 0.28);
+  transition: background-color 0.15s ease;
+}
+
+.botao-redondo:hover {
+  background: var(--caramelo-forte);
+}
+
+.leitor-aviso .botao-redondo {
+  background: var(--ambar);
+  color: #2a1a0f;
+}
+
+.vazia-titulo {
+  margin-bottom: 22px;
+}
+
+/* --- Detalhes do livro ---------------------------------------------------- */
+
+.detalhes-botoes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.confirmar {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--perigo);
+  border-radius: var(--raio);
+  background: var(--papel);
+}
+
+.confirmar .detalhes-acoes {
+  justify-content: center;
+}
+
+.ficha-linha {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.editor-capa-acoes {
+  justify-content: flex-end;
+}
+
+/* --- Leitor --------------------------------------------------------------- */
+
+.faixa-fim .botao-icone,
+.faixa-anotacao .botao-icone {
+  color: #2a1a0f;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.faixa-fim .faixa-sim {
+  background: #3e2513;
+  color: #f4e9d0;
+}
+
+.nota-nova {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.nota-nova .anotacao-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.busca-campo {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+}
+
+/* --- Três livros por fileira --------------------------------------------- */
+/*
+ * A altura dos livros nas prateleiras sai da largura disponível: num
+ * celular cabem exatamente três livros em pé por fileira; em telas largas a
+ * altura para em 210px e cabem mais.
+ */
+
+.prateleiras-area {
+  container-type: inline-size;
+}
+
+.prateleiras {
+  --espaco: 16px;
+  --altura-capa: min(210px, calc((100cqw - 48px - 2 * var(--espaco)) / 3 / 0.715));
+  column-gap: var(--espaco);
+}
+
+.prateleiras-lombadas {
+  column-gap: 3px;
+}
+
+@media (max-width: 560px) {
+  .prateleiras {
+    --espaco: 10px;
+    --altura-capa: min(210px, calc((100cqw - 32px - 2 * var(--espaco)) / 3 / 0.715));
+  }
+}
+
+/* A grade segue a mesma conta: três capas por linha no celular. */
+.grade-area {
+  container-type: inline-size;
+}
+
+@media (max-width: 560px) {
+  .grade {
+    --altura-capa: calc((100cqw - 2 * 14px) / 3 / 0.715);
+    gap: 20px 14px;
+  }
+}
+
+/* --- Arrumar a estante arrastando ---------------------------------------- */
+
+.livro,
+.volume {
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.livro.arrastando,
+.volume.arrastando {
+  z-index: 3;
+  opacity: 0.6;
+  outline: 3px dashed var(--ambar);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.volume.arrastando {
+  transform: translateY(-10px);
+}
+
+html.arrastando-livro,
+html.arrastando-livro * {
+  cursor: grabbing !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Durante o arrasto nada "levanta" sozinho: só o livro arrastado se destaca. */
+html.arrastando-livro .livro-botao:hover .capa {
+  transform: none;
 }

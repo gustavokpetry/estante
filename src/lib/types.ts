@@ -7,7 +7,7 @@ export type Tema = 'auto' | 'claro' | 'escuro'
 export type ModoLeitura = '3d' | 'simples' | 'unica'
 export type FiltroPagina = 'nenhum' | 'sepia' | 'noite'
 export type VisualEstante = 'grade' | 'madeira' | 'lombadas'
-export type Ordenacao = 'recentes' | 'lidos' | 'titulo' | 'progresso' | 'avaliacao'
+export type Ordenacao = 'manual' | 'recentes' | 'lidos' | 'titulo' | 'progresso' | 'avaliacao'
 export type ModeloCapa = 'classico' | 'minimalista' | 'faixa' | 'geometrico'
 export type CorDestaque = 'amarelo' | 'verde' | 'rosa' | 'azul'
 
@@ -48,6 +48,8 @@ export interface Livro {
   parametrosCapa?: ParametrosCapa | null
   /** Cor predominante da capa, usada na lombada. */
   corLombada?: string | null
+  /** Posição na ordem arrumada à mão. Livros sem posição (recém-adicionados) vêm primeiro. */
+  ordem?: number | null
 }
 
 export interface ArquivoPdf {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconeFechar } from './Icones'
 
 const CAMINHO = 'M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z'
 
@@ -64,14 +65,11 @@ export function EscolherEstrelas({ valor, aoMudar }: Props) {
           </span>
         ))}
       </div>
-      <span className="estrelas-legenda">
-        {valor ? `${valor.toLocaleString('pt-BR')} de 5` : 'Sem avaliação'}
-        {valor !== null && (
-          <button type="button" className="link-discreto link-compacto" onClick={() => aoMudar(null)}>
-            Remover
-          </button>
-        )}
-      </span>
+      {valor !== null && (
+        <button type="button" className="botao-icone botao-icone-pequeno" onClick={() => aoMudar(null)} aria-label="Remover a avaliação" title="Remover a avaliação">
+          <IconeFechar width={16} height={16} />
+        </button>
+      )}
     </div>
   )
 }

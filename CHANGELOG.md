@@ -1,5 +1,18 @@
 # Histórico de versões
 
+## 1.8 (13 de novembro de 2026)
+
+- **Menos texto:** explicações longas saíram e o que ficou foi resumido, na estante, no leitor e nas janelas.
+- **Ícones no lugar de botões com texto:** adicionar, ler, detalhes, filtros, trocar capa, excluir, salvar nota e outros.
+  Todo ícone tem dica ao passar o mouse e nome para leitores de tela.
+- **Estante de madeira como visual padrão.** Quem já tinha escolhido outro visual continua com ele.
+- **Três livros por fileira no celular:** o tamanho dos livros passou a sair da largura da tela. Em telas largas cabem mais.
+  Livros horizontais ocupam mais espaço, então a fileira deles leva menos.
+- **Arrumar a estante arrastando**, nos três visuais. Com o mouse, é só arrastar. No toque, segure o livro um instante
+  e arraste. No teclado, Alt + seta para a esquerda ou direita. A ordem fica guardada como "Minha ordem", que virou a
+  ordenação padrão; livros novos entram no começo.
+- O cartão "Você parou aqui" saiu da estante. O progresso continua na barra de cada livro.
+
 ## 1.7 (12 de novembro de 2026)
 
 Esta entrega reúne as etapas 1.3 a 1.7 do plano.

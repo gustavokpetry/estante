@@ -21,13 +21,13 @@ function ehCotaCheia(e: unknown): boolean {
 
 /** Lê um PDF, extrai o necessário e grava tudo no banco local. */
 export async function importarPdf(arquivo: File): Promise<ResultadoImportacao> {
-  if (!ehPdf(arquivo)) return { tipo: 'erro', mensagem: 'Não é um arquivo PDF.' }
+  if (!ehPdf(arquivo)) return { tipo: 'erro', mensagem: 'Não é PDF' }
 
   let dados: ArrayBuffer
   try {
     dados = await arquivo.arrayBuffer()
   } catch {
-    return { tipo: 'erro', mensagem: 'Não foi possível ler o arquivo.' }
+    return { tipo: 'erro', mensagem: 'Não abriu' }
   }
 
   const id = await sha256Hex(dados)
@@ -40,7 +40,7 @@ export async function importarPdf(arquivo: File): Promise<ResultadoImportacao> {
   try {
     aberto = await abrirPdf(dados.slice(0))
   } catch (e) {
-    const mensagem = e instanceof FalhaAoAbrirPdf ? e.message : 'Não foi possível abrir este PDF.'
+    const mensagem = e instanceof FalhaAoAbrirPdf ? e.message : 'Não abriu'
     return { tipo: 'erro', mensagem }
   }
 
@@ -86,10 +86,10 @@ export async function importarPdf(arquivo: File): Promise<ResultadoImportacao> {
     if (ehCotaCheia(e)) {
       return {
         tipo: 'erro',
-        mensagem: 'O armazenamento do navegador está cheio. Exclua algum livro e tente de novo.',
+        mensagem: 'Sem espaço no navegador',
       }
     }
-    return { tipo: 'erro', mensagem: 'Não foi possível guardar este PDF.' }
+    return { tipo: 'erro', mensagem: 'Não foi possível guardar' }
   } finally {
     void aberto.fechar()
   }

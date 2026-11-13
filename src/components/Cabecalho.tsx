@@ -30,17 +30,16 @@ export function Cabecalho({ aoAdicionar, aoAbrirSobre }: Props) {
       <div className="tabua-conteudo">
         <h1 className="placa">Estante</h1>
         <div className="tabua-acoes">
-          <button type="button" className="botao botao-principal" onClick={aoAdicionar}>
+          <button type="button" className="botao-icone botao-icone-destaque" onClick={aoAdicionar} aria-label="Adicionar PDFs" title="Adicionar PDFs">
             <IconeMais />
-            <span>Adicionar PDFs</span>
           </button>
-          <button type="button" className="botao-icone" onClick={abrirEstatisticas} aria-label="Estatísticas de leitura" title="Estatísticas de leitura">
+          <button type="button" className="botao-icone" onClick={abrirEstatisticas} aria-label="Estatísticas" title="Estatísticas">
             <IconeGrafico />
           </button>
           <button type="button" className="botao-icone" onClick={alternarTema} aria-label={`${ROTULO[tema]}. Trocar tema`} title={ROTULO[tema]}>
             {tema === 'auto' ? <IconeAuto /> : tema === 'claro' ? <IconeSol /> : <IconeLua />}
           </button>
-          <button type="button" className="botao-icone" onClick={aoAbrirSobre} aria-label="Backup, armazenamento e sobre o app" title="Backup, armazenamento e sobre o app">
+          <button type="button" className="botao-icone" onClick={aoAbrirSobre} aria-label="Backup e armazenamento" title="Backup e armazenamento">
             <IconeInfo />
           </button>
         </div>

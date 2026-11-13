@@ -7,7 +7,7 @@ import type { Livro, ModoHorizontal, Orientacao, StatusLeitura } from '../lib/ty
 import { Dialogo } from './Dialogo'
 import { DialogoCapa } from './DialogoCapa'
 import { EscolherEstrelas } from './Estrelas'
-import { IconeFechar } from './Icones'
+import { IconeCaneta, IconeFechar, IconeLer, IconeLixeira, IconeMais } from './Icones'
 import { useCapa, versaoDaCapa } from './useCapa'
 
 interface Props {
@@ -69,18 +69,49 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
   if (editandoCapa) return <DialogoCapa livro={livro} aoFechar={() => setEditandoCapa(false)} />
 
   return (
-    <Dialogo titulo="Detalhes do livro" aoFechar={aoFechar} largo>
+    <Dialogo titulo="Detalhes" aoFechar={aoFechar} largo>
       <div className="detalhes">
         <div className="detalhes-lateral">
           <div className="detalhes-capa" style={{ aspectRatio: String(livro.proporcaoCapa || 0.7) }}>
             {capa && <img src={capa} alt={`Capa de ${livro.titulo}`} />}
           </div>
-          <button type="button" className="botao" onClick={() => setEditandoCapa(true)}>
-            Trocar capa
-          </button>
-          <button type="button" className="botao botao-principal" onClick={() => aoLer(livro.id)}>
-            {livro.ultimaLeitura ? 'Continuar lendo' : 'Ler'}
-          </button>
+          <div className="detalhes-botoes">
+            <button type="button" className="botao-quadrado botao-quadrado-principal" onClick={() => aoLer(livro.id)} aria-label="Ler" title="Ler">
+              <IconeLer />
+            </button>
+            <button type="button" className="botao-quadrado" onClick={() => setEditandoCapa(true)} aria-label="Trocar a capa" title="Trocar a capa">
+              <IconeCaneta />
+            </button>
+            <button
+              type="button"
+              className="botao-quadrado botao-quadrado-perigo"
+              onClick={() => setConfirmandoExclusao(true)}
+              aria-label="Excluir o livro"
+              title="Excluir o livro"
+            >
+              <IconeLixeira />
+            </button>
+          </div>
+          {confirmandoExclusao && (
+            <div className="confirmar" role="alertdialog" aria-label="Excluir o livro">
+              <p>Excluir o livro e as anotações?</p>
+              <div className="detalhes-acoes">
+                <button
+                  type="button"
+                  className="botao botao-mini botao-perigo"
+                  onClick={() => {
+                    void excluirLivro(livro.id)
+                    aoFechar()
+                  }}
+                >
+                  Excluir
+                </button>
+                <button type="button" className="botao botao-mini" onClick={() => setConfirmandoExclusao(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="detalhes-corpo">
@@ -95,7 +126,7 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
 
           <div className="campos-lado-a-lado">
             <label className="campo">
-              <span>Status de leitura</span>
+              <span>Status</span>
               <select value={livro.status} onChange={(e) => atualizar({ status: e.target.value as StatusLeitura })}>
                 <option value="quero-ler">Quero ler</option>
                 <option value="lendo">Lendo</option>
@@ -134,8 +165,8 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
                     }
                   }}
                 />
-                <button type="button" className="botao botao-mini" onClick={adicionarTag} disabled={!limparTag(novaTag)}>
-                  Adicionar
+                <button type="button" className="botao-quadrado botao-quadrado-mini" onClick={adicionarTag} disabled={!limparTag(novaTag)} aria-label="Adicionar a tag" title="Adicionar a tag">
+                  <IconeMais />
                 </button>
               </span>
               <datalist id="tags-conhecidas">
@@ -171,8 +202,8 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
                     }
                   }}
                 />
-                <button type="button" className="botao botao-mini" onClick={() => void criarColecao()} disabled={!novaColecao.trim()}>
-                  Criar
+                <button type="button" className="botao-quadrado botao-quadrado-mini" onClick={() => void criarColecao()} disabled={!novaColecao.trim()} aria-label="Criar a coleção" title="Criar a coleção">
+                  <IconeMais />
                 </button>
               </span>
             </div>
@@ -180,85 +211,40 @@ export function DialogoLivro({ livro, aoFechar, aoLer }: Props) {
 
           <div className="campos-lado-a-lado">
             <label className="campo">
-              <span>Formato das páginas</span>
+              <span>Formato</span>
               <select value={livro.orientacao} onChange={(e) => atualizar({ orientacao: e.target.value as Orientacao })}>
-                <option value="vertical">Vertical (em pé)</option>
-                <option value="horizontal">Horizontal (deitado)</option>
+                <option value="vertical">Vertical</option>
+                <option value="horizontal">Horizontal</option>
               </select>
             </label>
             {livro.orientacao === 'horizontal' && (
               <label className="campo">
-                <span>Como o livro abre</span>
+                <span>Abertura</span>
                 <select
                   value={livro.modoHorizontal ?? 'auto'}
                   onChange={(e) => atualizar({ modoHorizontal: e.target.value === 'auto' ? null : (e.target.value as ModoHorizontal) })}
                 >
-                  <option value="auto">Automático</option>
-                  <option value="topo">Encadernação no topo</option>
-                  <option value="uma">Uma página por vez</option>
-                  <option value="duas">Duas páginas lado a lado</option>
+                  <option value="auto">Automática</option>
+                  <option value="topo">No topo</option>
+                  <option value="uma">Uma página</option>
+                  <option value="duas">Duas páginas</option>
                 </select>
               </label>
             )}
           </div>
 
-          <dl className="ficha">
-            {livro.ultimaLeitura !== null && (
-              <div>
-                <dt>Leitura</dt>
-                <dd>
-                  Página {livro.paginaAtual} de {livro.totalPaginas}
-                </dd>
-              </div>
-            )}
-            <div>
-              <dt>Tamanho</dt>
-              <dd>
-                {plural(livro.totalPaginas, 'página', 'páginas')}, {formatarBytes(livro.tamanhoBytes)}
-              </dd>
-            </div>
-            <div>
-              <dt>Adicionado em</dt>
-              <dd>{formatarData(livro.adicionadoEm)}</dd>
-            </div>
-            <div>
-              <dt>Arquivo</dt>
-              <dd className="quebra">{livro.nomeArquivo}</dd>
-            </div>
-            {livro.temTexto === false && (
-              <div>
-                <dt>Busca</dt>
-                <dd>Indisponível: este PDF é feito de imagens, sem texto.</dd>
-              </div>
-            )}
-          </dl>
-
-          <div className="zona-exclusao">
-            {confirmandoExclusao ? (
-              <>
-                <p>Excluir “{livro.titulo}”? O PDF e as anotações saem deste navegador e não dá para desfazer.</p>
-                <div className="detalhes-acoes">
-                  <button
-                    type="button"
-                    className="botao botao-perigo"
-                    onClick={() => {
-                      void excluirLivro(livro.id)
-                      aoFechar()
-                    }}
-                  >
-                    Excluir livro
-                  </button>
-                  <button type="button" className="botao" onClick={() => setConfirmandoExclusao(false)}>
-                    Manter na estante
-                  </button>
-                </div>
-              </>
-            ) : (
-              <button type="button" className="botao botao-discreto-perigo" onClick={() => setConfirmandoExclusao(true)}>
-                Excluir livro
-              </button>
-            )}
-          </div>
+          <p className="ficha-linha">
+            {[
+              plural(livro.totalPaginas, 'página', 'páginas'),
+              formatarBytes(livro.tamanhoBytes),
+              livro.ultimaLeitura !== null ? `na página ${livro.paginaAtual}` : '',
+              livro.temTexto === false ? 'sem busca (PDF de imagens)' : '',
+            ]
+              .filter(Boolean)
+              .join(', ')}
+            <br />
+            <span className="quebra">{livro.nomeArquivo}</span>, {formatarData(livro.adicionadoEm)}
+          </p>
         </div>
       </div>
     </Dialogo>

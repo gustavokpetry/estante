@@ -17,6 +17,7 @@ import {
   IconeAvancar,
   IconeBusca,
   IconeCaneta,
+  IconeCerto,
   IconeFechar,
   IconeMais,
   IconeMarcador,
@@ -81,16 +82,16 @@ interface Aberto {
 }
 
 const MODOS: Array<{ valor: ModoLeitura; nome: string; descricao: string }> = [
-  { valor: '3d', nome: 'Virada de página', descricao: 'A folha dobra e vira, como no papel.' },
-  { valor: 'simples', nome: 'Livro simples', descricao: 'Duas páginas lado a lado, troca rápida.' },
-  { valor: 'unica', nome: 'Página única', descricao: 'Uma página por vez, maior.' },
+  { valor: '3d', nome: 'Virada com dobra', descricao: '' },
+  { valor: 'simples', nome: 'Duas páginas', descricao: '' },
+  { valor: 'unica', nome: 'Página única', descricao: '' },
 ]
 
 const ABERTURAS: Array<{ valor: ModoHorizontal | null; nome: string; descricao: string }> = [
-  { valor: null, nome: 'Automático', descricao: 'Escolhe o que cabe melhor na tela.' },
-  { valor: 'topo', nome: 'Encadernação no topo', descricao: 'A página sobe, como num calendário de mesa.' },
-  { valor: 'uma', nome: 'Uma página por vez', descricao: 'A página vira para o lado.' },
-  { valor: 'duas', nome: 'Duas páginas lado a lado', descricao: 'Como um álbum aberto.' },
+  { valor: null, nome: 'Automática', descricao: '' },
+  { valor: 'topo', nome: 'No topo', descricao: '' },
+  { valor: 'uma', nome: 'Uma página', descricao: '' },
+  { valor: 'duas', nome: 'Duas páginas', descricao: '' },
 ]
 
 const FILTROS: Array<{ valor: FiltroPagina; nome: string }> = [
@@ -152,7 +153,7 @@ export function Leitor({ livroId }: { livroId: string }) {
         const registro = await db.livros.get(livroId)
         const arquivo = await db.arquivos.get(livroId)
         if (!registro || !arquivo) {
-          if (!cancelado) setErro('Este livro não está mais na estante.')
+          if (!cancelado) setErro('Livro não encontrado.')
           return
         }
         const pdf = await abrirPdf(await arquivo.blob.arrayBuffer())
@@ -181,7 +182,7 @@ export function Leitor({ livroId }: { livroId: string }) {
         if (!cancelado) setSumario(itens)
       } catch (e) {
         if (cancelado) return
-        setErro(e instanceof FalhaAoAbrirPdf ? e.message : 'Não foi possível abrir este livro.')
+        setErro(e instanceof FalhaAoAbrirPdf ? e.message : 'Não foi possível abrir.')
       }
     })()
 
@@ -550,8 +551,8 @@ export function Leitor({ livroId }: { livroId: string }) {
     return (
       <div className="leitor leitor-aviso">
         <p>{erro}</p>
-        <button type="button" className="botao botao-principal" onClick={voltarParaEstante}>
-          Voltar para a estante
+        <button type="button" className="botao-redondo" onClick={voltarParaEstante} aria-label="Voltar para a estante" title="Voltar para a estante">
+          <IconeVoltar width={28} height={28} />
         </button>
       </div>
     )
@@ -639,13 +640,9 @@ export function Leitor({ livroId }: { livroId: string }) {
 
       {anotando && (
         <div className="faixa-anotacao" role="status">
-          <span>
-            {semTexto
-              ? 'Modo anotação: este PDF é feito de imagens, então não há texto para selecionar.'
-              : 'Modo anotação: selecione um trecho para destacar. As páginas não viram com o toque.'}
-          </span>
-          <button type="button" className="botao botao-mini" onClick={() => setAnotando(false)}>
-            Sair
+          <span>{semTexto ? 'PDF de imagens: sem texto para selecionar.' : 'Selecione um trecho para destacar.'}</span>
+          <button type="button" className="botao-icone botao-icone-pequeno" onClick={() => setAnotando(false)} aria-label="Sair do modo anotação" title="Sair do modo anotação">
+            <IconeFechar />
           </button>
         </div>
       )}
@@ -672,7 +669,7 @@ export function Leitor({ livroId }: { livroId: string }) {
         )}
 
         <div ref={area} className="leitor-area">
-          {!aberto && <p className="leitor-abrindo">Abrindo o livro…</p>}
+          {!aberto && <p className="leitor-abrindo">Abrindo…</p>}
           {aberto && disposicao && (
             <ContextoPagina.Provider value={dadosDaLeitura}>
             <Palco
@@ -703,7 +700,6 @@ export function Leitor({ livroId }: { livroId: string }) {
             destaques={destaques}
             destaqueEmFoco={destaqueEmFoco}
             aoIr={mudarPagina}
-            aoAlternarMarcador={() => void alternarMarcador()}
             aoFechar={() => setPainel('nenhum')}
           />
         )}
@@ -722,7 +718,7 @@ export function Leitor({ livroId }: { livroId: string }) {
         {painel === 'aparencia' && (
           <section className="painel painel-aparencia" aria-label="Aparência da leitura">
             <header className="painel-topo">
-              <h2>Aparência</h2>
+              <h2>Leitura</h2>
               <button type="button" className="botao-icone botao-icone-pequeno" onClick={() => setPainel('nenhum')} aria-label="Fechar aparência">
                 <IconeFechar />
               </button>
@@ -730,7 +726,7 @@ export function Leitor({ livroId }: { livroId: string }) {
             <div className="painel-corpo">
               {horizontal && (
                 <fieldset className="opcoes">
-                  <legend>Como este livro abre</legend>
+                  <legend>Abertura</legend>
                   {ABERTURAS.map((a) => (
                     <label key={a.valor ?? 'auto'} className="opcao">
                       <input
@@ -739,17 +735,14 @@ export function Leitor({ livroId }: { livroId: string }) {
                         checked={aberturaEscolhida === a.valor}
                         onChange={() => void db.livros.update(livroId, { modoHorizontal: a.valor })}
                       />
-                      <span>
-                        <strong>{a.nome}</strong>
-                        <small>{a.descricao}</small>
-                      </span>
+                      <span>{a.nome}</span>
                     </label>
                   ))}
                 </fieldset>
               )}
 
               <fieldset className="opcoes">
-                <legend>Como as páginas viram</legend>
+                <legend>Virada</legend>
                 {MODOS.filter((m) => !horizontal || m.valor !== 'unica').map((m) => (
                   <label key={m.valor} className="opcao">
                     <input
@@ -758,23 +751,17 @@ export function Leitor({ livroId }: { livroId: string }) {
                       checked={horizontal ? (modo === '3d') === (m.valor === '3d') : modo === m.valor}
                       onChange={() => escolherModo(m.valor)}
                     />
-                    <span>
-                      <strong>{horizontal && m.valor === 'simples' ? 'Troca simples' : m.nome}</strong>
-                      <small>{horizontal && m.valor === 'simples' ? 'Sem animação de dobra, troca rápida.' : m.descricao}</small>
-                    </span>
+                    <span>{horizontal && m.valor === 'simples' ? 'Troca simples' : m.nome}</span>
                   </label>
                 ))}
               </fieldset>
               <label className="opcao opcao-solta">
                 <input type="checkbox" checked={soNesteLivro} onChange={(e) => alternarSoNesteLivro(e.target.checked)} />
-                <span>
-                  <strong>Usar este modo só neste livro</strong>
-                  <small>Os outros livros seguem o modo padrão.</small>
-                </span>
+                <span>Só neste livro</span>
               </label>
 
               <fieldset className="opcoes">
-                <legend>Cor das páginas</legend>
+                <legend>Cor</legend>
                 <div className="segmentos">
                   {FILTROS.map((f) => (
                     <label key={f.valor} className={`segmento${(filtro ?? 'nenhum') === f.valor ? ' ativo' : ''}`}>
@@ -803,7 +790,6 @@ export function Leitor({ livroId }: { livroId: string }) {
                     <IconeMais />
                   </button>
                 </div>
-                {tresD && zoom > 1 && <p className="painel-nota">Com zoom, a página fica plana para você poder arrastá-la. A virada volta em 100%.</p>}
               </div>
             </div>
           </section>
@@ -825,20 +811,20 @@ export function Leitor({ livroId }: { livroId: string }) {
           {CORES_DESTAQUE.map((c) => (
             <button key={c.valor} type="button" className={`cor-destaque destaque-${c.valor}`} aria-label={`Destacar em ${c.nome.toLowerCase()}`} title={c.nome} onClick={() => void destacar(c.valor, false)} />
           ))}
-          <button type="button" className="botao botao-mini" onClick={() => void destacar('amarelo', true)}>
-            Com nota
+          <button type="button" className="botao-icone botao-icone-pequeno" onClick={() => void destacar('amarelo', true)} aria-label="Destacar e escrever uma nota" title="Destacar com nota">
+            <IconeAnotacoes />
           </button>
         </div>
       )}
 
       {sugerirLido && (
         <div className="faixa-fim" role="status">
-          <span>Você chegou à última página. Marcar o livro como lido?</span>
-          <button type="button" className="botao botao-mini botao-principal" onClick={() => void db.livros.update(livroId, { status: 'lido' })}>
-            Marcar como lido
+          <span>Marcar como lido?</span>
+          <button type="button" className="botao-icone botao-icone-pequeno faixa-sim" onClick={() => void db.livros.update(livroId, { status: 'lido' })} aria-label="Marcar como lido" title="Marcar como lido">
+            <IconeCerto />
           </button>
-          <button type="button" className="botao botao-mini" onClick={() => setFimDispensado(true)}>
-            Agora não
+          <button type="button" className="botao-icone botao-icone-pequeno" onClick={() => setFimDispensado(true)} aria-label="Agora não" title="Agora não">
+            <IconeFechar />
           </button>
         </div>
       )}
@@ -889,7 +875,7 @@ export function Leitor({ livroId }: { livroId: string }) {
               }
             }}
           />
-          <span aria-hidden="true">de {total}</span>
+          <span aria-hidden="true">/ {total}</span>
         </label>
       </footer>
     </div>

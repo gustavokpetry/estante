@@ -17,9 +17,9 @@ import { Dialogo } from './Dialogo'
 import { useCapa, versaoDaCapa } from './useCapa'
 
 const TIPOS: Array<{ valor: TipoCapa; nome: string }> = [
-  { valor: 'pdf', nome: 'Primeira página' },
+  { valor: 'pdf', nome: 'Do PDF' },
   { valor: 'image', nome: 'Imagem' },
-  { valor: 'generated', nome: 'Criar capa' },
+  { valor: 'generated', nome: 'Criar' },
 ]
 
 export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () => void }) {
@@ -62,7 +62,7 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
       setImagem(await createImageBitmap(arquivo))
       setEnquadramento({ zoom: 1, x: 0.5, y: 0.5 })
     } catch {
-      setErro('Não foi possível abrir essa imagem. Use um arquivo JPG, PNG ou WebP.')
+      setErro('Imagem inválida. Use JPG, PNG ou WebP.')
     }
   }
 
@@ -105,7 +105,7 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
   const podeSalvar = !salvando && (tipo !== 'image' || imagem !== null)
 
   return (
-    <Dialogo titulo="Capa do livro" aoFechar={aoFechar} largo>
+    <Dialogo titulo="Capa" aoFechar={aoFechar} largo>
       <div className="editor-capa">
         <div className="segmentos" role="radiogroup" aria-label="Tipo de capa">
           {TIPOS.map((t) => (
@@ -126,26 +126,24 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
           </div>
 
           <div className="editor-capa-controles">
-            {tipo === 'pdf' && <p>A capa será a primeira página do PDF, como quando o livro foi adicionado.</p>}
-
             {tipo === 'image' && (
               <>
                 <label className="campo">
-                  <span>Imagem (JPG, PNG ou WebP)</span>
+                  <span>Arquivo</span>
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => void escolherImagem(e.target.files?.[0])} />
                 </label>
                 {imagem && (
                   <>
                     <label className="campo">
-                      <span>Aproximar</span>
+                      <span>Zoom</span>
                       <input type="range" min={1} max={3} step={0.01} value={enquadramento.zoom} onChange={(e) => setEnquadramento({ ...enquadramento, zoom: Number(e.target.value) })} />
                     </label>
                     <label className="campo">
-                      <span>Posição horizontal</span>
+                      <span>Horizontal</span>
                       <input type="range" min={0} max={1} step={0.01} value={enquadramento.x} onChange={(e) => setEnquadramento({ ...enquadramento, x: Number(e.target.value) })} />
                     </label>
                     <label className="campo">
-                      <span>Posição vertical</span>
+                      <span>Vertical</span>
                       <input type="range" min={0} max={1} step={0.01} value={enquadramento.y} onChange={(e) => setEnquadramento({ ...enquadramento, y: Number(e.target.value) })} />
                     </label>
                   </>
@@ -156,11 +154,11 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
             {tipo === 'generated' && (
               <>
                 <label className="campo">
-                  <span>Título na capa</span>
+                  <span>Título</span>
                   <input type="text" value={parametros.titulo} onChange={(e) => setParametros({ ...parametros, titulo: e.target.value })} />
                 </label>
                 <label className="campo">
-                  <span>Autor na capa (opcional)</span>
+                  <span>Autor</span>
                   <input type="text" value={parametros.autor} onChange={(e) => setParametros({ ...parametros, autor: e.target.value })} />
                 </label>
                 <fieldset className="opcoes">
@@ -175,7 +173,7 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
                   </div>
                 </fieldset>
                 <fieldset className="opcoes">
-                  <legend>Cor de fundo</legend>
+                  <legend>Cor</legend>
                   <div className="paleta">
                     {CORES_DE_CAPA.map((cor) => (
                       <label key={cor} className={`amostra${parametros.cor === cor ? ' ativa' : ''}`} style={{ background: cor }}>
@@ -200,10 +198,7 @@ export function DialogoCapa({ livro, aoFechar }: { livro: Livro; aoFechar: () =>
 
         <div className="detalhes-acoes editor-capa-acoes">
           <button type="button" className="botao botao-principal" onClick={() => void salvar()} disabled={!podeSalvar}>
-            {salvando ? 'Salvando…' : 'Salvar capa'}
-          </button>
-          <button type="button" className="botao" onClick={aoFechar}>
-            Cancelar
+            {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         </div>
       </div>

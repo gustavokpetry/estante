@@ -49,7 +49,7 @@ export function SoltarArquivos({ aoSoltar }: { aoSoltar: (arquivos: File[]) => v
   return (
     <div className="soltar" aria-hidden="true">
       <div className="soltar-moldura">
-        <p>Solte os PDFs para guardá-los na estante</p>
+        <p>Solte os PDFs aqui</p>
       </div>
     </div>
   )

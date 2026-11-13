@@ -55,44 +55,36 @@ export function PainelBusca({ livroId, temTexto, termo, aoMudarTermo, aoIr, aoFe
   }, [textos, termo])
 
   const preparando = temTexto === null
-  const progresso = indexacao.livroId === livroId && indexacao.total > 0 ? `página ${indexacao.feitas} de ${indexacao.total}` : 'na fila'
+  const progresso = indexacao.livroId === livroId && indexacao.total > 0 ? `${indexacao.feitas}/${indexacao.total}` : 'na fila'
 
   return (
     <section className="painel painel-busca" aria-label="Buscar no livro">
       <header className="painel-topo">
-        <h2>Buscar no livro</h2>
+        <h2>Buscar</h2>
         <button type="button" className="botao-icone botao-icone-pequeno" onClick={aoFechar} aria-label="Fechar busca">
           <IconeFechar />
         </button>
       </header>
       <div className="painel-corpo">
-        {temTexto === false && <p className="selo selo-alerta">Este PDF é feito de imagens, sem texto. A busca não está disponível para ele.</p>}
+        {temTexto === false && <p className="selo selo-alerta">PDF de imagens: sem busca.</p>}
         {preparando && (
           <p className="selo" role="status">
-            Preparando o texto deste livro para a busca ({progresso}). Pode continuar lendo.
+            Preparando o texto ({progresso})
           </p>
         )}
         {temTexto === true && (
           <>
-            <label className="campo">
-              <span>Palavra ou trecho</span>
-              <input type="search" value={digitado} autoFocus onChange={(e) => setDigitado(e.target.value)} />
-            </label>
+            <input className="busca-campo" type="search" placeholder="Palavra ou trecho" aria-label="Palavra ou trecho" value={digitado} autoFocus onChange={(e) => setDigitado(e.target.value)} />
             {resultados && (
               <p className="painel-nota" role="status">
-                {resultados.length === 0
-                  ? 'Nada encontrado.'
-                  : resultados.length >= LIMITE
-                    ? `Mostrando as primeiras ${LIMITE} ocorrências.`
-                    : plural(resultados.length, 'ocorrência', 'ocorrências')}
+                {resultados.length === 0 ? 'Nada encontrado' : resultados.length >= LIMITE ? `${LIMITE}+ resultados` : plural(resultados.length, 'resultado', 'resultados')}
               </p>
             )}
-            {!resultados && <p className="painel-nota">Digite pelo menos duas letras. A busca ignora acentos e maiúsculas.</p>}
             <ul className="resultados">
               {resultados?.map((r, i) => (
                 <li key={i}>
                   <button type="button" onClick={() => aoIr(r.pagina)}>
-                    <span className="resultado-pagina">Página {r.pagina}</span>
+                    <span className="resultado-pagina">p. {r.pagina}</span>
                     <span className="resultado-trecho">
                       {r.antes}
                       <mark>{r.termo}</mark>
